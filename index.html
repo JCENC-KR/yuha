@@ -872,7 +872,7 @@ function speak(text) {
 }
 
 const app = document.getElementById("app");
-const APP_VERSION = "v1.4 (2026-07-19)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
+const APP_VERSION = "v1.5 (2026-07-19)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
 
 // ===== 시험 기록 (localStorage) =====
 const MODE_LABELS = { meaning: "📖 기본", spelling: "🔥 고난도", writing: "✍️ 최고난도" };
@@ -1229,7 +1229,7 @@ function renderQuestion() {
     <div class="word-box">
       <div class="word">
         <span>${(spelling || writing) ? w.ko : w.en}</span>
-        ${(spelling || writing) ? "" : `<button class="btn-speak" id="btn-speak" title="발음 듣기">🔊</button>`}
+        <button class="btn-speak" id="btn-speak" title="발음 듣기">🔊</button>
       </div>
       <div class="word-hint">${writing ? "아래 칸에 스펠링을 쓰세요 ✏️ (태블릿 손글씨 입력 가능)" : spelling ? "알맞은 영어 스펠링을 고르세요 (키보드 1~4)" : "알맞은 뜻을 고르세요 (키보드 1~4)"}</div>
     </div>
