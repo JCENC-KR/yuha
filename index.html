@@ -872,7 +872,7 @@ function speak(text) {
 }
 
 const app = document.getElementById("app");
-const APP_VERSION = "v1.5 (2026-07-19)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
+const APP_VERSION = "v1.6 (2026-07-19)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
 
 // ===== 시험 기록 (localStorage) =====
 const MODE_LABELS = { meaning: "📖 기본", spelling: "🔥 고난도", writing: "✍️ 최고난도" };
@@ -1096,7 +1096,7 @@ function renderRanking() {
         </div>`).join("")}
     </div>`
     : `<div class="history-empty">아직 틀린 단어가 없어요! 👏</div>`}
-    <button class="btn-primary" id="btn-back">← 처음 화면으로</button>
+    <button class="btn-primary" id="btn-back">🏠 처음으로</button>
   `;
   document.getElementById("btn-back").addEventListener("click", renderStart);
   app.querySelectorAll(".btn-speak-sm").forEach(b =>
@@ -1218,7 +1218,7 @@ function renderQuestion() {
       <span class="round-badge ${isRetry ? "retry" : ""}">
         ${isRetry ? `🔁 오답 다시 풀기 (${state.round}차)` : "1차 시험"}
       </span>
-      <button class="btn-restart" id="btn-restart">⟲ 처음부터</button>
+      <button class="btn-restart" id="btn-restart">🏠 처음으로</button>
     </div>
     <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
     <div class="progress-text">${state.idx + 1} / ${state.queue.length}</div>
@@ -1421,13 +1421,13 @@ function renderResult() {
              </div>`;
            }).join("")}
          </div>`}
-    <button class="btn-primary" id="btn-again">처음부터 다시 하기</button>
+    <button class="btn-primary" id="btn-again">🏠 처음으로</button>
   `;
   document.getElementById("btn-again").addEventListener("click", renderStart);
 }
 
 function confirmRestart() {
-  if (confirm("정말 처음부터 다시 시작할까요? 지금까지의 진행이 사라집니다.")) {
+  if (confirm("시험을 그만두고 처음 화면으로 갈까요? 지금까지의 진행은 사라집니다.")) {
     renderStart();
   }
 }
