@@ -61,6 +61,7 @@
   .rank-word { flex: 1; min-width: 0; }
   .rank-word .en { font-weight: 800; color: #2d2456; }
   .rank-word .ko { font-size: .8rem; color: #999; margin-top: 1px; }
+  .rank-tip { font-size: .8rem; color: #a07850; background: #fdf8f0; border-radius: 8px; padding: 5px 8px; margin-top: 5px; line-height: 1.4; }
   .rank-bar { height: 6px; background: #e8e4f7; border-radius: 999px; margin-top: 6px; overflow: hidden; }
   .rank-bar > div { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #eb5757, #f2994a); }
   .rank-cnt { font-weight: 800; color: #c0392b; font-size: .9rem; white-space: nowrap; flex-shrink: 0; }
@@ -585,6 +586,270 @@ const LESSONS = [
 
 const ALL_WORDS = LESSONS.flatMap(l => l.words);
 
+// ===== 단어별 암기 팁 (오답 랭킹 화면에 표시) =====
+const TIPS = {
+  // U1L1
+  "map": "게임 속 '맵'이 바로 지도예요",
+  "face": "페이스북 = '얼굴' 책",
+  "when": "wh- 질문 삼총사: when 언제 · where 어디 · which 어느",
+  "money": "머니머니해도 money = 돈!",
+  "world": "월드컵 = 전 세계 대회",
+  "bill": "빌 게이츠 아저씨는 지폐(bill) 부자",
+  "coin": "코인 노래방엔 동전을 넣죠",
+  "memory": "메모리 카드에 사진(추억)을 저장 → 기억",
+  "collect": "컬렉션(collection)은 모아 놓은 것 → collect = 모으다",
+  "represent": "re(다시) + present(보여주다) → 나타내다, 상징하다",
+  "wrinkle": "w는 묵음! '링클' — 링클 프리 = 주름 없는",
+  "scrapbook": "scrap(조각) + book → 조각을 모아 붙인 책",
+  // U1L2
+  "with": "'위드 코로나' = 코로나와 함께",
+  "light": "라이트를 켜면 → 빛, 밝은",
+  "where": "wh- 질문: where = 어디",
+  "always": "all(모든) + ways(길) → 어느 길에서나 = 항상",
+  "cloudy": "cloud(구름) + y → 구름 낀, 흐린",
+  "alive": "a + live(살다) → 살아 있는",
+  "prize": "1등 상품 = 프라이즈",
+  "proud": "메달 따고 어깨 으쓱 → proud 자랑스러운",
+  "stage": "무대 = 스테이지 (콘서트 스테이지)",
+  "contest": "OO 콘테스트 = OO 대회",
+  "hug": "허그 = 꼭 껴안기. 세 글자로 짧게 안아줘요",
+  "nap": "낮잠은 짧으니까 단어도 짧게 nap",
+  // U2L1
+  "hard": "하드 트레이닝 = 열심히·힘들게 훈련",
+  "dance": "댄스 = 춤. 철자는 d-a-n-c-e",
+  "every": "에브리데이 = 매일 → every = 모든, 매~",
+  "great": "그레이트! = 정말 대단해!",
+  "another": "an + other(다른) → 또 하나의",
+  "pleased": "please(기쁘게 하다) + d → 기쁜",
+  "give a big hand": "큰 손(big hand)을 주다 → 박수를 치다",
+  "spin": "팽이가 스핀~ 돌아요",
+  "speed": "스피드 = 속도. e가 두 개 나란히!",
+  "amazing": "어메이징! = 놀라워!",
+  "support": "서포터즈 = 지지하는 사람들. p 두 개!",
+  "teenager": "thirTEEN~nineTEEN의 teen → 십대",
+  // U2L2
+  "pull": "문에 PULL = 당기세요 (PUSH는 미세요)",
+  "role": "롤모델 = 역할(role)의 본보기가 되는 사람",
+  "swim": "수영장 = swimming pool",
+  "prince": "왕자 prince, 공주는 princess",
+  "street": "스트리트 패션 = 길거리 패션. t가 두 번!",
+  "handsome": "hand + some인데 뜻은 '잘생긴' — d를 빼먹지 마세요",
+  "together": "투게더 아이스크림은 함께 나눠 먹죠",
+  "go down on one's knees": "무릎(knee) 쪽으로 내려가다 → 무릎을 꿇다",
+  "appear": "마술사가 '짠!' 하고 나타나다. p 두 개!",
+  "partner": "파트너 = 짝, 동반자",
+  "perform": "퍼포먼스(performance)를 하다 → 공연하다",
+  "fantastic": "판타스틱! = 환상적이야! (fantasy 환상)",
+  // U3L1
+  "call": "콜! = 부르다, 전화하다",
+  "hour": "h는 묵음이라 '아워' — 해피 아워 = 행복한 시간",
+  "pass": "패스! 옆으로 지나가다·통과하다",
+  "example": "문제집의 'ex)'가 example(예)의 줄임말",
+  "problem": "노 프라블럼! = 문제없어!",
+  "school bag": "school(학교) + bag(가방) = 책가방",
+  "law": "로스쿨 = 법(law) 배우는 학교",
+  "scold": "차갑게(cold) 혼내는 느낌 → scold",
+  "decide": "가위로 자르듯 딱! 결정하다",
+  "annoyed": "시끄러운 노이즈(noise) 때문에 짜증 난!",
+  "Coke": "코카콜라의 애칭 = Coke. 대문자 C로 시작!",
+  "wallet": "삼성 월렛 = 삼성 지갑. l 두 개!",
+  // U3L2
+  "miss": "버스를 미스! = 놓치다. s 두 개!",
+  "hurry": "허리 업(Hurry up)! = 서둘러! r 두 개!",
+  "wrong": "w는 묵음 '롱' — write처럼 w로 시작",
+  "office": "오피스텔 = 사무실(office) + 호텔. f 두 개!",
+  "unlucky": "un(반대) + lucky(운 좋은) → 운이 없는",
+  "fall on one's face": "얼굴(face) 쪽으로 넘어지다(fall)",
+  "reach": "팔을 쭉 뻗어 리치~ 닿다, 도달하다",
+  "barely": "bare(맨-) + ly → 맨몸으로 겨우겨우 = 간신히",
+  "balance": "밸런스 게임 = 균형 잡기 게임",
+  "mechanic": "머신(machine)을 고치는 사람 → 정비공",
+  "suddenly": "sudden(갑작스러운) + ly → 갑자기. d 두 개!",
+  "wedding": "웨딩드레스 = 결혼식 드레스. d 두 개!",
+  // U4L1
+  "hope": "아이 호프 소(I hope so) = 그러길 바라",
+  "word": "워드 프로그램으로 단어를 입력해요",
+  "knock": "k는 묵음! '노크'하고 들어가요",
+  "future": "영화 '백 투 더 퓨처' = 미래로!",
+  "honest": "h는 묵음 '어니스트' = 정직한",
+  "come true": "꿈이 진짜(true)가 되어 오다(come) → 실현되다",
+  "healthy": "health(건강) + y → 건강한. ea 조심!",
+  "regularly": "regular(규칙적인) + ly → 규칙적으로",
+  "various": "버라이어티 쇼 = 다양한 게 나오는 쇼",
+  "postpone": "post(뒤) + pone(놓다) → 뒤로 미루다",
+  "challenge": "챌린지 영상 = 도전 영상",
+  "important": "임포턴트 = 중요한. im-por-tant 세 박자",
+  // U4L2
+  "read": "리딩(reading) = 읽기",
+  "wait": "웨이팅 맛집 = 기다려야 하는 맛집",
+  "wash": "카 워시(car wash) = 세차",
+  "brush": "칫솔 = toothbrush → brush = 솔, 닦다",
+  "homework": "home(집) + work(일) → 집에서 하는 일 = 숙제",
+  "make a bed": "침대를 만든다?! → 잠자리를 정돈하다",
+  "comb": "b는 묵음 '코움' = 빗. bomb(폭탄)도 b 묵음!",
+  "share": "쉐어하다 = 함께 쓰다, 나누다",
+  "exercise": "엑서사이즈 = 운동. exer-cise",
+  "chew": "츄잉껌 = 씹는(chew) 껌",
+  "nagging": "낵낵(nag nag)거리는 잔소리. g 두 개!",
+  "oversleep": "over(넘치게) + sleep(자다) → 늦잠 자다",
+  // U5L1
+  "get": "겟! = 얻었다, 받았다",
+  "best": "베스트 = 가장 좋은 (good-better-best)",
+  "some": "썸원(someone) = 어떤 사람 → some = 약간의",
+  "check": "체크! = 확인 완료 ✓",
+  "right": "라잇 나우(right now) = 지금 곧장",
+  "choose": "고르다 choose, 고른 것은 choice. o 두 개!",
+  "vote": "투표함에 보트(vote)! 표를 넣어요",
+  "award": "시상식 = 어워드(award) → 상",
+  "fiction": "픽션 = 꾸며낸 이야기 (논픽션 = 실화)",
+  "bookmark": "book + mark(표시) → 책갈피 (인터넷 북마크도!)",
+  "bookworm": "book + worm(벌레) → 책벌레",
+  "book report": "book + report(보고서) → 독후감",
+  // U5L2
+  "fan": "팬클럽의 팬 = 좋아하는 사람",
+  "dark": "다크 초콜릿 = 어두운 색 초콜릿",
+  "hold": "홀드! 꽉 잡아!",
+  "spell": "마법 주문 = spell. 스펠링도 글자 '주문'! l 두 개",
+  "voice": "보이스피싱 = 목소리로 속이기 → voice = 목소리",
+  "ask for": "ask(묻다) + for(~을 위해) → ~을 요청하다",
+  "become": "be(되다) + come(오다) → ~이 되다",
+  "mirror": "미러볼 = 거울 공. r이 세 개나!",
+  "rush": "러시아워 = 다들 돌진하는(rush) 시간",
+  "brave": "브레이브 = 용감한 (영화 '메리다와 마법의 숲' 원제!)",
+  "dragon": "드래곤 = 용",
+  "wizard": "해리포터는 위저드(마법사)!",
+  // U6L1
+  "low": "로우 프라이스 = 낮은 가격",
+  "rich": "리치 = 부자 (반대는 poor 가난한)",
+  "cheap": "칩~하다 = 싸다 (비싼 건 expensive)",
+  "first": "퍼스트 = 첫 번째, 처음의",
+  "price": "프라이스 태그 = 가격표",
+  "middle class": "middle(중간) + class(계층) = 중산층",
+  "mass": "매스 게임 = 많은 사람이 함께 → mass = 대중의",
+  "effect": "특수 이펙트 = 특수 효과. f 두 개!",
+  "system": "시스템 = 방식, 체계",
+  "quality": "퀄리티 좋다 = 질이 좋다",
+  "produce": "프로듀서(producer)는 만드는 사람 → produce = 만들다",
+  "slogan": "슬로건 = 표어 (Just Do It처럼!)",
+  // U6L2
+  "far": "파~ 멀리멀리",
+  "road": "로드맵 = 길 안내 지도 → road = 길",
+  "really": "리얼리? 진짜? l 두 개!",
+  "at last": "맨 마지막(last)에 드디어 → 마침내",
+  "get in[on]": "차 안(in)으로 쏙 → (차를) 타다",
+  "airplane": "air(공중) + plane(비행기) = 비행기",
+  "traffic jam": "차들이 잼(jam)처럼 꽉 → 교통혼잡",
+  "stick": "스티커(sticker)는 착 붙어 꼼짝 못 해요",
+  "shake": "쉐이크 = 흔들어 만든 음료 → shake = 흔들다",
+  "severe": "'서비어' = 심한, 엄한. se-ve-re",
+  "happen": "해프닝 = 갑자기 일어난 일 → happen. p 두 개!",
+  "dizzy": "빙글빙글 디지~ = 어지러운. z 두 개!",
+  // U7L1
+  "fat": "뚱뚱한 fat, 반대는 thin(마른)",
+  "sell": "세일(sale)은 파는 것 → sell = 팔다. l 두 개!",
+  "beach": "비치볼 = 해변에서 노는 공",
+  "relax": "릴렉스~ 편하게 쉬어요",
+  "visitor": "visit(방문하다) + or(사람) → 방문객",
+  "water fight": "water(물) + fight(싸움) = 물싸움",
+  "lie": "라이어(liar) = 거짓말쟁이 → lie = 거짓말; '눕다'도 lie!",
+  "view": "오션뷰 = 바다가 보이는 경치",
+  "along": "a + long(길게) → 길을 따라서~",
+  "shallow": "얕은 shallow, 반대는 deep(깊은). l 두 개!",
+  "sandcastle": "sand(모래) + castle(성) = 모래성",
+  "surf": "서핑(surfing) = 파도타기 → surf",
+  // U7L2
+  "sea": "씨월드 = 바다 세상. see(보다)와 발음 같아요",
+  "deep": "딥~한 바다 = 깊은 바다. e 두 개!",
+  "get to": "~에 겟(닿다)! → 도착하다",
+  "laugh": "'래프' 하하 웃다 — gh는 f 발음!",
+  "inside": "in(안) + side(쪽) → ~의 안에",
+  "vacation": "바캉스 = vacation 방학·휴가",
+  "dive": "다이빙 = 물속으로 풍덩 뛰어들기",
+  "spit": "퉤! 스핏 = 뱉다",
+  "breath": "숨 breath(명사), 숨쉬다는 breathe",
+  "swallow": "꿀꺽~ 스왈로우 = 삼키다 (제비라는 뜻도!)",
+  "slippery": "슬립(slip 미끄러짐)! → slippery 미끄러운. p 두 개!",
+  "glittering": "글리터(반짝이) → glittering 반짝이는. t 두 개!",
+  // U8L1
+  "carrot": "캐롯 = 당근. r 두 개 + t 하나!",
+  "potato": "포테이토칩 = 감자칩",
+  "minute": "파이브 미닛(5 minutes) = 5분",
+  "chicken": "치킨 = 닭! 철자는 chi-cken",
+  "how to": "하우 투 영상 = ~하는 방법 영상",
+  "health": "헬스장은 건강(health) 지키는 곳",
+  "fry": "후라이팬 = 튀기고 볶는 팬 → fry",
+  "add": "더하기 = 애드(add). d 두 개!",
+  "oil": "올리브 오일 = 올리브 기름",
+  "peel": "바나나 껍질을 필~ 벗기다. e 두 개!",
+  "onion": "어니언링 = 양파링",
+  "ingredient": "요리 재료 = 인그리디언트 (레시피 단골 단어)",
+  // U8L2
+  "egg": "에그 = 달걀. g 두 개!",
+  "hen": "암탉 hen — 헨젤과 그레텔의 암탉을 상상!",
+  "well": "웰던(well-done) = 잘 익힌 → well = 잘",
+  "happy": "해피 = 행복한. p 두 개!",
+  "tooth": "칫솔 = toothbrush → tooth = 이. o 두 개!",
+  "enough": "'이너프' 충분해! — gh는 f 발음",
+  "mix": "믹서기 = 섞는 기계 → mix = 섞다",
+  "pot": "요리 냄비 = 팟 (1인용 = 팟, 큰 솥도 pot)",
+  "chef": "셰프 = 주방장. ch인데 '셰'로 읽어요!",
+  "topic": "토픽 = 주제, 화젯거리",
+  "simmer": "보글보글 시머~ = 끓이다. m 두 개!",
+  "fridge": "refrigerator(냉장고)의 줄임말 = fridge. d 조심!",
+  // U9L1
+  "hurt": "아야! 허트 = 다치다, 아프다",
+  "stay": "호텔 스테이 = 머무르기",
+  "worry": "돈 워리 비 해피 = 걱정 마! r 두 개!",
+  "hospital": "호스피탈 = 병원. hos-pi-tal",
+  "treat": "헤어 트리트먼트 = 머릿결 치료 → treat = 치료하다",
+  "crowded": "crowd(군중) + ed → 사람 많아 붐비는",
+  "patient": "'페이션트' = 환자. '참을성 있는'이란 뜻도!",
+  "headache": "head(머리) + ache(아픔) = 두통",
+  "emergency": "응급실 = ER(Emergency Room) → 긴급, 비상",
+  "bleed": "blood(피)가 나오다 → bleed. e 두 개!",
+  "bandage": "밴드의 정식 이름 = bandage 붕대",
+  "symptom": "'심텀' = 증상. 중간에 p가 숨어 있어요!",
+  // U9L2
+  "ill": "몸에 '일' 나면 아픈 것 → ill. l 두 개!",
+  "be able to": "able(할 수 있는) → be able to = ~할 수 있다",
+  "excellent": "엑설런트! = 아주 훌륭해! l 두 개!",
+  "take a rest": "휴식(rest)을 취하다(take) → 쉬다",
+  "fall in love": "사랑(love) 속으로(in) 풍덩 빠지다(fall)",
+  "stomachache": "stomach(배) + ache(아픔) = 복통",
+  "pretend": "프리텐드 = ~인 척, ~인 체하다",
+  "instead of": "인스테드 오브 = ~ 대신에",
+  "clinic": "동네 클리닉 = 개인병원",
+  "disguise": "'디스가이즈' = 변장하다 — 스파이의 필수 기술!",
+  "give a shot": "주사(shot)를 놓다(give) — shot은 '한 방'",
+  "prescribe": "pre(미리) + scribe(쓰다) → 의사가 미리 써주다 = 처방하다",
+  // U10L1
+  "top": "탑클래스 = 꼭대기(top) 등급",
+  "guess": "게스 후(Guess who)? = 누게~게? 추측해봐! s 두 개!",
+  "rider": "ride(타다) + r(사람) → 타는 사람 (라이더)",
+  "which": "wh- 질문: which = 어느 것",
+  "because": "비코즈 = 왜냐하면, ~ 때문에. be-cau-se",
+  "fear": "공포 영화의 fear = 공포, 무서워하다",
+  "while": "와일 = ~하는 동안",
+  "located": "로케이션(location 위치)에서 → located = ~에 위치한",
+  "increase": "in(위로↑) → 증가하다 (반대: decrease 감소)",
+  "rapidly": "래핑처럼 빠르게! rapid(빠른) + ly",
+  "thrill": "스릴 만점! = 전율·흥분. l 두 개!",
+  "at the same time": "같은(same) 시간(time)에 → 동시에",
+  // U10L2
+  "buy": "바이 = 사다. bye(안녕)와 발음이 같아요!",
+  "gate": "공항 게이트 = 출입문",
+  "seat": "카시트 = 차 좌석 → seat = 자리",
+  "thirsty": "'써스티' = 목말라! 물 주세요~",
+  "yesterday": "비틀즈 노래 '예스터데이' = 어제",
+  "lamp": "알라딘의 요술 램프 = 등불",
+  "steal": "도둑이 스틸! = 훔치다. steel(철)과 발음 같음",
+  "escape": "방탈출 카페 = room escape → 탈출하다",
+  "moment": "원 모먼트! = 잠깐만! → moment = 순간",
+  "imagine": "이미지(image)를 머릿속에 그리다 → 상상하다",
+  "adventure": "어드벤처 = 모험 (놀이공원 '어드벤처'!)",
+  "maze": "영화 '메이즈 러너' = 미로를 달리는 사람"
+};
+
 // ===== 상태 =====
 let state = {};
 
@@ -607,7 +872,7 @@ function speak(text) {
 }
 
 const app = document.getElementById("app");
-const APP_VERSION = "v1.3 (2026-07-19)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
+const APP_VERSION = "v1.4 (2026-07-19)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
 
 // ===== 시험 기록 (localStorage) =====
 const MODE_LABELS = { meaning: "📖 기본", spelling: "🔥 고난도", writing: "✍️ 최고난도" };
@@ -823,6 +1088,7 @@ function renderRanking() {
           <div class="rank-word">
             <div class="en">${w.en}</div>
             <div class="ko">${w.ko}</div>
+            ${TIPS[w.en] ? `<div class="rank-tip">💡 ${TIPS[w.en]}</div>` : ""}
             <div class="rank-bar"><div style="width:${Math.max(8, Math.round(stats[w.en] / max * 100))}%"></div></div>
           </div>
           <span class="rank-cnt">${stats[w.en]}회</span>
@@ -971,7 +1237,6 @@ function renderQuestion() {
     <input type="text" class="write-input" id="write-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="스펠링 쓰기">
     <div class="write-hint">태블릿에선 손글씨 키보드로 쓰면 글자로 바뀌어요</div>
     <button class="btn-next" id="btn-submit">제출 (Enter)</button>
-    <button class="btn-alt" id="btn-reveal">✏️ 노트에 썼어요 — 정답 보고 직접 채점하기</button>
     <div id="reveal-area"></div>
     ` : `
     <div class="choices">
@@ -986,8 +1251,6 @@ function renderQuestion() {
   document.getElementById("btn-restart").addEventListener("click", confirmRestart);
   const speakBtn = document.getElementById("btn-speak");
   if (speakBtn) speakBtn.addEventListener("click", () => speak(w.en));
-  const revealBtn = document.getElementById("btn-reveal");
-  if (revealBtn) revealBtn.addEventListener("click", revealAnswer);
   const submitBtn = document.getElementById("btn-submit");
   if (submitBtn) submitBtn.addEventListener("click", submitWriting);
   const writeInp = document.getElementById("write-input");
@@ -1042,7 +1305,6 @@ function submitWriting() {
 
   inp.disabled = true;
   document.getElementById("btn-submit").style.display = "none";
-  document.getElementById("btn-reveal").style.display = "none";
   document.getElementById("reveal-area").innerHTML = `
     <div class="answer-reveal">
       <div class="feedback ${correct ? "ok" : "no"}" style="margin-top:0; margin-bottom:10px">${correct ? "⭕ 정답입니다!" : "❌ 틀렸어요!"}</div>
@@ -1056,50 +1318,6 @@ function submitWriting() {
   nextBtn.addEventListener("click", nextQuestion);
   nextBtn.focus();
   speak(w.en); // 정답 제출 시 항상 자동으로 발음 재생
-}
-
-// ===== 최고난도(쓰기) 모드: 노트에 쓴 경우 — 정답 공개 → 스스로 채점 =====
-function revealAnswer() {
-  if (state.revealed) return;
-  const btn = document.getElementById("btn-reveal");
-  if (!btn) return;
-  state.revealed = true;
-  btn.style.display = "none";
-  const inp = document.getElementById("write-input");
-  if (inp) inp.disabled = true;
-  const sub = document.getElementById("btn-submit");
-  if (sub) sub.style.display = "none";
-  const w = currentWord();
-  document.getElementById("reveal-area").innerHTML = `
-    <div class="answer-reveal">
-      <div class="answer-label">정답 스펠링</div>
-      <div class="answer-word"><span>${w.en}</span><button class="btn-speak" id="btn-speak2" title="발음 듣기">🔊</button></div>
-      <div class="self-check-q">노트에 쓴 스펠링과 똑같나요? 스스로 채점하세요!</div>
-      <div class="self-check">
-        <button class="btn-self ok" id="btn-self-ok">⭕ 맞았어요 (1)</button>
-        <button class="btn-self no" id="btn-self-no">❌ 틀렸어요 (2)</button>
-      </div>
-    </div>`;
-  document.getElementById("btn-speak2").addEventListener("click", () => speak(w.en));
-  document.getElementById("btn-self-ok").addEventListener("click", () => selfCheck(true));
-  document.getElementById("btn-self-no").addEventListener("click", () => selfCheck(false));
-  speak(w.en); // 정답 공개 시 항상 자동으로 발음 재생
-}
-
-function selfCheck(correct) {
-  if (state.answered || !state.revealed) return;
-  state.answered = true;
-  const w = currentWord();
-  state.totalAttempts++;
-  if (correct) {
-    state.totalCorrect++;
-    if (state.round === 1 && state.isReview) bumpWrongStat(w.en, -1); // 복습에서 맞히면 통계 감소
-  } else {
-    state.wrongThisRound.push(w);
-    state.wrongCount[w.en] = (state.wrongCount[w.en] || 0) + 1;
-    if (state.round === 1) bumpWrongStat(w.en, +1); // 오답 통계 누적 (오답 라운드는 제외)
-  }
-  nextQuestion();
 }
 
 // ===== 답변 처리 =====
@@ -1219,12 +1437,9 @@ document.addEventListener("keydown", e => {
   if (!state.queue) return;
   if (state.mode === "writing") {
     if (e.key === "Enter") {
-      if (!state.answered && !state.revealed) submitWriting(); // 입력이 비어 있으면 무시됨
-      else if (state.answered && document.getElementById("btn-next")
+      if (!state.answered) submitWriting(); // 입력이 비어 있으면 무시됨
+      else if (document.getElementById("btn-next")
                && document.activeElement !== document.getElementById("btn-next")) nextQuestion();
-    } else if (state.revealed && !state.answered && document.activeElement !== document.getElementById("write-input")) {
-      if (e.key === "1") selfCheck(true);
-      else if (e.key === "2") selfCheck(false);
     }
     return;
   }
