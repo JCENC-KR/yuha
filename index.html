@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>유하의 영어 시험</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#667eea">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="영어시험">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    width: 100%;
+    max-width: 560px;
+    padding: 32px 28px;
+  }
+  h1 { font-size: 1.5rem; color: #4a3b8c; text-align: center; margin-bottom: 8px; }
+  .subtitle { text-align: center; color: #888; font-size: .9rem; margin-bottom: 24px; }
+
+  /* 시작 화면 */
+  .lesson-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; max-height: 280px; overflow-y: auto; padding-right: 4px; }
+  .unit-head {
+    display: flex; align-items: center; gap: 8px; padding: 6px 2px 2px;
+    font-weight: 800; color: #4a3b8c; font-size: .92rem; cursor: pointer; user-select: none;
+  }
+  .unit-head input { width: 16px; height: 16px; accent-color: #667eea; cursor: pointer; }
+  .range-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .range-head .section-label { margin-bottom: 0; }
+  .btn-toggle-all { background: none; color: #8b7cc8; font-size: .78rem; padding: 4px 8px; font-weight: 600; }
+  .btn-toggle-all:hover { color: #4a3b8c; }
+  .btn-review {
+    width: 100%; padding: 13px; color: #fff;
+    background: linear-gradient(135deg, #f2994a, #f2c94c);
+  }
+  .btn-review:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(242,153,74,.4); }
+  .review-hint { font-size: .78rem; color: #b08968; margin-top: 8px; text-align: center; }
+  .lesson-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border: 2px solid #e5e0f5; border-radius: 12px;
+    cursor: pointer; transition: all .15s; user-select: none;
+  }
+  .lesson-item:hover { border-color: #b3a5e8; background: #f8f6ff; }
+  .lesson-item input { width: 18px; height: 18px; accent-color: #667eea; cursor: pointer; }
+  .lesson-item .name { font-weight: 600; color: #333; }
+  .lesson-item .count { margin-left: auto; color: #999; font-size: .85rem; }
+  .option-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+    padding: 10px 16px; background: #f5f3fc; border-radius: 10px;
+    cursor: pointer; user-select: none;
+  }
+  .option-row input { accent-color: #667eea; width: 16px; height: 16px; cursor: pointer; }
+  .option-row span { font-size: .9rem; color: #555; }
+  .mode-list { display: flex; gap: 10px; margin-bottom: 16px; }
+  .mode-item {
+    flex: 1; display: flex; flex-direction: column; gap: 4px;
+    padding: 12px 14px; border: 2px solid #e5e0f5; border-radius: 12px;
+    cursor: pointer; transition: all .15s; user-select: none; text-align: center;
+  }
+  .mode-item:hover { border-color: #b3a5e8; background: #f8f6ff; }
+  .mode-item.selected { border-color: #667eea; background: #f3f0ff; }
+  .mode-item input { display: none; }
+  .mode-item .mode-name { font-weight: 700; color: #4a3b8c; }
+  .mode-item .mode-desc { font-size: .78rem; color: #999; }
+  .section-label { font-size: .85rem; font-weight: 700; color: #777; margin-bottom: 8px; }
+
+  /* 실시간 점수 */
+  .score-line { display: flex; gap: 16px; justify-content: center; margin-bottom: 14px; font-weight: 700; font-size: .95rem; }
+  .score-line .sc-ok { color: #27ae60; }
+  .score-line .sc-no { color: #e74c3c; }
+
+  /* 최고난도(쓰기) 모드 */
+  .answer-reveal { margin-top: 18px; background: #f7f5ff; border-radius: 14px; padding: 20px; text-align: center; }
+  .answer-label { font-size: .8rem; color: #999; font-weight: 700; margin-bottom: 6px; }
+  .answer-word {
+    font-size: 2rem; font-weight: 800; color: #2d2456; letter-spacing: 1px;
+    display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px;
+  }
+  .self-check-q { font-size: .95rem; color: #666; margin-bottom: 12px; }
+  .write-input {
+    width: 100%; padding: 14px 16px; font-size: 1.3rem; font-family: inherit;
+    border: 2px solid #b3a5e8; border-radius: 12px; text-align: center;
+    letter-spacing: 1px; color: #2d2456; outline: none;
+  }
+  .write-input:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,.15); }
+  .write-input:disabled { background: #f5f5f5; color: #999; }
+  .write-hint { font-size: .75rem; color: #aaa; text-align: center; margin-top: 6px; }
+  .btn-alt {
+    width: 100%; padding: 10px; margin-top: 10px;
+    background: none; color: #8b7cc8; font-size: .85rem; font-weight: 600;
+  }
+  .btn-alt:hover { color: #4a3b8c; background: #f5f3fc; }
+  .my-answer { font-size: .95rem; color: #c0392b; margin-bottom: 6px; }
+  .my-answer b { letter-spacing: 1px; }
+  .self-check { display: flex; gap: 10px; }
+  .btn-self { flex: 1; padding: 14px; font-size: 1rem; }
+  .btn-self.ok { background: #eafaf1; color: #1e8449; border: 2px solid #27ae60; }
+  .btn-self.ok:hover { background: #d4f5e3; }
+  .btn-self.no { background: #fdedec; color: #c0392b; border: 2px solid #e74c3c; }
+  .btn-self.no:hover { background: #fadbd8; }
+
+  /* 시험 기록 */
+  .history-section { margin-top: 24px; }
+  .history-title { font-size: .9rem; font-weight: 700; color: #666; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .btn-clear-history { background: none; color: #bbb; font-size: .75rem; padding: 4px 8px; }
+  .btn-clear-history:hover { color: #e74c3c; }
+  .history-list { display: flex; flex-direction: column; gap: 6px; max-height: 190px; overflow-y: auto; }
+  .history-item { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: #f7f5ff; border-radius: 10px; font-size: .82rem; flex-wrap: wrap; }
+  .history-item .h-mode { font-weight: 700; color: #4a3b8c; white-space: nowrap; }
+  .history-item .h-score { font-weight: 700; color: #333; white-space: nowrap; }
+  .history-item .h-range { color: #999; }
+  .history-item .h-date { color: #bbb; margin-left: auto; white-space: nowrap; }
+  .history-empty { text-align: center; color: #bbb; font-size: .85rem; padding: 12px; }
+
+  button {
+    font-family: inherit; cursor: pointer; border: none; border-radius: 12px;
+    font-size: 1rem; font-weight: 600; transition: all .15s;
+  }
+  .btn-primary {
+    width: 100%; padding: 15px;
+    background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,.4); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* 퀴즈 화면 */
+  .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .round-badge {
+    background: #eef; color: #556; font-size: .8rem; font-weight: 700;
+    padding: 4px 12px; border-radius: 999px;
+  }
+  .round-badge.retry { background: #fde8e8; color: #c0392b; }
+  .btn-restart {
+    background: #f0f0f0; color: #666; padding: 6px 14px; font-size: .82rem;
+  }
+  .btn-restart:hover { background: #e0e0e0; }
+  .progress-track { background: #eee; border-radius: 999px; height: 10px; overflow: hidden; margin-bottom: 6px; }
+  .progress-fill {
+    height: 100%; border-radius: 999px; width: 0;
+    background: linear-gradient(90deg, #667eea, #a78bfa); transition: width .3s;
+  }
+  .progress-text { font-size: .8rem; color: #999; text-align: right; margin-bottom: 18px; }
+
+  .word-box { text-align: center; margin-bottom: 24px; }
+  .word {
+    font-size: 2.4rem; font-weight: 800; color: #2d2456; letter-spacing: .5px;
+    display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;
+  }
+  .btn-speak {
+    background: #eef; width: 42px; height: 42px; border-radius: 50%;
+    font-size: 1.2rem; flex-shrink: 0;
+  }
+  .btn-speak:hover { background: #dde; }
+  .word-hint { font-size: .85rem; color: #aaa; margin-top: 6px; }
+
+  .choices { display: flex; flex-direction: column; gap: 10px; }
+  .choice {
+    padding: 14px 18px; border: 2px solid #e5e0f5; border-radius: 12px;
+    background: #fff; font-size: 1.05rem; text-align: left; color: #333;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .choice .num {
+    background: #f0edfb; color: #7c6bd0; font-size: .8rem; font-weight: 700;
+    width: 24px; height: 24px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .choice:hover:not(:disabled) { border-color: #a78bfa; background: #faf8ff; }
+  .choice:disabled { cursor: default; }
+  .choice.correct { border-color: #27ae60; background: #eafaf1; color: #1e8449; font-weight: 700; }
+  .choice.correct .num { background: #27ae60; color: #fff; }
+  .choice.wrong { border-color: #e74c3c; background: #fdedec; color: #c0392b; }
+  .choice.wrong .num { background: #e74c3c; color: #fff; }
+  .choice.dim { opacity: .45; }
+
+  .feedback { text-align: center; margin-top: 18px; min-height: 30px; font-weight: 700; font-size: 1.05rem; }
+  .feedback.ok { color: #27ae60; }
+  .feedback.no { color: #e74c3c; }
+
+  .btn-next { width: 100%; padding: 14px; margin-top: 14px; background: #4a3b8c; color: #fff; }
+  .btn-next:hover { background: #5c4bad; }
+
+  /* 결과 화면 */
+  .result-emoji { font-size: 4rem; text-align: center; margin-bottom: 12px; }
+  .result-title { text-align: center; font-size: 1.4rem; font-weight: 800; color: #2d2456; margin-bottom: 20px; }
+  .stats { display: flex; gap: 10px; margin-bottom: 22px; }
+  .stat {
+    flex: 1; background: #f7f5ff; border-radius: 14px; padding: 16px 8px; text-align: center;
+  }
+  .stat .val { font-size: 1.6rem; font-weight: 800; color: #4a3b8c; }
+  .stat .label { font-size: .78rem; color: #999; margin-top: 4px; }
+  .wrong-list-title { font-size: .9rem; font-weight: 700; color: #666; margin-bottom: 10px; }
+  .wrong-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 22px; max-height: 200px; overflow-y: auto; }
+  .wrong-item {
+    display: flex; justify-content: space-between; padding: 10px 14px;
+    background: #fdf5f5; border-radius: 10px; font-size: .92rem;
+  }
+  .wrong-item .en { font-weight: 700; color: #b03a2e; }
+  .wrong-item .ko { color: #666; }
+  .wrong-item .cnt { color: #d98880; font-size: .8rem; margin-left: 8px; }
+  .perfect-msg { text-align: center; color: #27ae60; font-weight: 600; margin-bottom: 22px; }
+</style>
+</head>
+<body>
+<div class="card" id="app"></div>
+
+<script>
+// ===== 단어 데이터 (교재에서 추출) =====
+// ★ 새 단어 추가 방법: 아래 형식 그대로 붙여넣으면 시작 화면에 자동으로 나타납니다.
+//   { id: "u3l1", unit: 3, name: "Lesson 1 · 레슨 제목",
+//     words: [ { en: "word", ko: "뜻" }, ... ] },
+const LESSONS = [
+  {
+    id: "u1l1", unit: 1, name: "Lesson 1 · Collecting Bills and Coins",
+    words: [
+      { en: "map", ko: "지도" },
+      { en: "face", ko: "얼굴" },
+      { en: "when", ko: "~할 때, 언제" },
+      { en: "money", ko: "돈" },
+      { en: "world", ko: "세계, 세상" },
+      { en: "bill", ko: "지폐" },
+      { en: "coin", ko: "동전" },
+      { en: "memory", ko: "기억, 추억" },
+      { en: "collect", ko: "수집하다, 모으다" },
+      { en: "represent", ko: "나타내다, 상징하다" },
+      { en: "wrinkle", ko: "구겨지다, 주름이 지다" },
+      { en: "scrapbook", ko: "스크랩북" }
+    ]
+  },
+  {
+    id: "u1l2", unit: 1, name: "Lesson 2 · Lucy's Nap with Her Dolls",
+    words: [
+      { en: "with", ko: "~와 함께" },
+      { en: "light", ko: "빛, 조명 / 밝은" },
+      { en: "where", ko: "어디에, 어느 곳에" },
+      { en: "always", ko: "항상, 언제나" },
+      { en: "cloudy", ko: "구름이 낀, 흐린" },
+      { en: "alive", ko: "살아 있는" },
+      { en: "prize", ko: "상" },
+      { en: "proud", ko: "자랑스러운" },
+      { en: "stage", ko: "무대" },
+      { en: "contest", ko: "대회, 시합" },
+      { en: "hug", ko: "껴안다, 포옹하다" },
+      { en: "nap", ko: "낮잠" }
+    ]
+  },
+  {
+    id: "u2l1", unit: 2, name: "Lesson 1 · Korean B-Boy Teams",
+    words: [
+      { en: "hard", ko: "열심히 / 어려운" },
+      { en: "dance", ko: "춤추다 / 춤" },
+      { en: "every", ko: "모든, 매 ~마다" },
+      { en: "great", ko: "대단한, 훌륭한" },
+      { en: "another", ko: "또 하나의, 다른" },
+      { en: "pleased", ko: "기쁜" },
+      { en: "give a big hand", ko: "박수를 치다" },
+      { en: "spin", ko: "회전하다, 돌다" },
+      { en: "speed", ko: "속도" },
+      { en: "amazing", ko: "놀라운" },
+      { en: "support", ko: "지지하다, 떠받치다" },
+      { en: "teenager", ko: "십대" }
+    ]
+  },
+  {
+    id: "u2l2", unit: 2, name: "Lesson 2 · A B-Boy Prince",
+    words: [
+      { en: "pull", ko: "당기다" },
+      { en: "role", ko: "역할" },
+      { en: "swim", ko: "수영하다" },
+      { en: "prince", ko: "왕자" },
+      { en: "street", ko: "길, 거리" },
+      { en: "handsome", ko: "잘생긴" },
+      { en: "together", ko: "함께, 같이" },
+      { en: "go down on one's knees", ko: "무릎을 꿇다" },
+      { en: "appear", ko: "나타나다" },
+      { en: "partner", ko: "동반자, 파트너" },
+      { en: "perform", ko: "공연하다" },
+      { en: "fantastic", ko: "환상적인" }
+    ]
+  },
+  {
+    id: "u3l1", unit: 3, name: "Lesson 1 · The Meaning of Murphy's Law",
+    words: [
+      { en: "call", ko: "부르다" },
+      { en: "hour", ko: "시간" },
+      { en: "pass", ko: "지나가다" },
+      { en: "example", ko: "예, 본보기" },
+      { en: "problem", ko: "문제" },
+      { en: "school bag", ko: "책가방" },
+      { en: "law", ko: "법" },
+      { en: "scold", ko: "혼내다" },
+      { en: "decide", ko: "결정하다" },
+      { en: "annoyed", ko: "짜증이 나는, 화가 난" },
+      { en: "Coke", ko: "콜라" },
+      { en: "wallet", ko: "지갑" }
+    ]
+  },
+  {
+    id: "u3l2", unit: 3, name: "Lesson 2 · An Unlucky Day",
+    words: [
+      { en: "miss", ko: "놓치다" },
+      { en: "hurry", ko: "서두르다" },
+      { en: "wrong", ko: "틀린" },
+      { en: "office", ko: "사무실, 회사" },
+      { en: "unlucky", ko: "운이 없는" },
+      { en: "fall on one's face", ko: "앞으로 넘어지다" },
+      { en: "reach", ko: "도착하다, 도달하다" },
+      { en: "barely", ko: "간신히" },
+      { en: "balance", ko: "균형" },
+      { en: "mechanic", ko: "정비공" },
+      { en: "suddenly", ko: "갑자기" },
+      { en: "wedding", ko: "결혼식" }
+    ]
+  },
+  {
+    id: "u4l1", unit: 4, name: "Lesson 1 · To My Lovely Daughter",
+    words: [
+      { en: "hope", ko: "바라다, 희망" },
+      { en: "word", ko: "말, 낱말, 단어" },
+      { en: "knock", ko: "(문을) 두드리다" },
+      { en: "future", ko: "미래" },
+      { en: "honest", ko: "정직한" },
+      { en: "come true", ko: "실현되다" },
+      { en: "healthy", ko: "건강한, 건강에 좋은" },
+      { en: "regularly", ko: "규칙적으로" },
+      { en: "various", ko: "다양한" },
+      { en: "postpone", ko: "뒤로 미루다" },
+      { en: "challenge", ko: "시도하다, 도전" },
+      { en: "important", ko: "중요한" }
+    ]
+  },
+  {
+    id: "u4l2", unit: 4, name: "Lesson 2 · Mom's Nagging",
+    words: [
+      { en: "read", ko: "읽다" },
+      { en: "wait", ko: "기다리다" },
+      { en: "wash", ko: "씻다" },
+      { en: "brush", ko: "(솔로) 닦다, 솔" },
+      { en: "homework", ko: "숙제" },
+      { en: "make a bed", ko: "잠자리를 정돈하다" },
+      { en: "comb", ko: "빗질하다, 머리빗" },
+      { en: "share", ko: "함께 쓰다" },
+      { en: "exercise", ko: "운동하다, 운동" },
+      { en: "chew", ko: "씹다" },
+      { en: "nagging", ko: "잔소리" },
+      { en: "oversleep", ko: "늦잠 자다" }
+    ]
+  },
+  {
+    id: "u5l1", unit: 5, name: "Lesson 1 · Children's Book Awards",
+    words: [
+      { en: "get", ko: "받다, 얻다" },
+      { en: "best", ko: "가장 좋은, 최고" },
+      { en: "some", ko: "약간의, 얼마간의" },
+      { en: "check", ko: "확인하다" },
+      { en: "right", ko: "곧장, 곧바로" },
+      { en: "choose", ko: "선택하다" },
+      { en: "vote", ko: "투표하다" },
+      { en: "award", ko: "상" },
+      { en: "fiction", ko: "소설, 꾸며낸 이야기" },
+      { en: "bookmark", ko: "책갈피" },
+      { en: "bookworm", ko: "책벌레, 독서광" },
+      { en: "book report", ko: "독후감, 독서 감상문" }
+    ]
+  },
+  {
+    id: "u5l2", unit: 5, name: "Lesson 2 · A Gift from Harry",
+    words: [
+      { en: "fan", ko: "팬" },
+      { en: "dark", ko: "어둠, 어두운" },
+      { en: "hold", ko: "잡다" },
+      { en: "spell", ko: "주문, 주문을 외우다" },
+      { en: "voice", ko: "목소리" },
+      { en: "ask for", ko: "~을 요청하다, ~을 부탁하다" },
+      { en: "become", ko: "~이 되다" },
+      { en: "mirror", ko: "거울" },
+      { en: "rush", ko: "돌진하다" },
+      { en: "brave", ko: "용감한" },
+      { en: "dragon", ko: "용" },
+      { en: "wizard", ko: "마법사" }
+    ]
+  },
+  {
+    id: "u6l1", unit: 6, name: "Lesson 1 · Ford Model T",
+    words: [
+      { en: "low", ko: "낮은" },
+      { en: "rich", ko: "부자인" },
+      { en: "cheap", ko: "싼" },
+      { en: "first", ko: "처음의" },
+      { en: "price", ko: "가격" },
+      { en: "middle class", ko: "중간 계층, 중산층" },
+      { en: "mass", ko: "대중의, 많은 양의" },
+      { en: "effect", ko: "영향, 효과" },
+      { en: "system", ko: "방식, 시스템" },
+      { en: "quality", ko: "질" },
+      { en: "produce", ko: "제작하다, 만들다" },
+      { en: "slogan", ko: "표어" }
+    ]
+  },
+  {
+    id: "u6l2", unit: 6, name: "Lesson 2 · A Flying Car",
+    words: [
+      { en: "far", ko: "(거리가) 먼" },
+      { en: "road", ko: "길" },
+      { en: "really", ko: "정말, 진짜" },
+      { en: "at last", ko: "마침내" },
+      { en: "get in[on]", ko: "(차를) 타다" },
+      { en: "airplane", ko: "비행기" },
+      { en: "traffic jam", ko: "교통혼잡" },
+      { en: "stick", ko: "꼼짝 못하다, 막대기" },
+      { en: "shake", ko: "흔들다" },
+      { en: "severe", ko: "엄한, 심한" },
+      { en: "happen", ko: "(사건이) 일어나다" },
+      { en: "dizzy", ko: "어지러운" }
+    ]
+  },
+  {
+    id: "u7l1", unit: 7, name: "Lesson 1 · Boracay Beach",
+    words: [
+      { en: "fat", ko: "뚱뚱한" },
+      { en: "sell", ko: "팔다" },
+      { en: "beach", ko: "해변" },
+      { en: "relax", ko: "휴식을 취하다" },
+      { en: "visitor", ko: "손님, 방문객" },
+      { en: "water fight", ko: "물싸움" },
+      { en: "lie", ko: "눕다, 거짓말하다" },
+      { en: "view", ko: "경치, 경관" },
+      { en: "along", ko: "~을 따라서" },
+      { en: "shallow", ko: "얕은" },
+      { en: "sandcastle", ko: "모래성" },
+      { en: "surf", ko: "파도타기를 하다" }
+    ]
+  },
+  {
+    id: "u7l2", unit: 7, name: "Lesson 2 · Hi, Mr. Dolphin",
+    words: [
+      { en: "sea", ko: "바다" },
+      { en: "deep", ko: "깊은" },
+      { en: "get to", ko: "도착하다" },
+      { en: "laugh", ko: "웃다, 웃음" },
+      { en: "inside", ko: "~의 안에" },
+      { en: "vacation", ko: "방학, 휴가" },
+      { en: "dive", ko: "잠수하다, (물속으로) 뛰어들다" },
+      { en: "spit", ko: "뱉다, 토하다" },
+      { en: "breath", ko: "숨" },
+      { en: "swallow", ko: "삼키다, 제비" },
+      { en: "slippery", ko: "미끄러운" },
+      { en: "glittering", ko: "반짝이는, 빛나는" }
+    ]
+  },
+  {
+    id: "u8l1", unit: 8, name: "Lesson 1 · How to Make Chicken Curry",
+    words: [
+      { en: "carrot", ko: "당근" },
+      { en: "potato", ko: "감자" },
+      { en: "minute", ko: "분, 순간" },
+      { en: "chicken", ko: "닭, 닭고기" },
+      { en: "how to", ko: "~하는 방법" },
+      { en: "health", ko: "건강" },
+      { en: "fry", ko: "(기름에) 볶다, 튀기다" },
+      { en: "add", ko: "더하다, 추가하다" },
+      { en: "oil", ko: "기름" },
+      { en: "peel", ko: "껍질을 벗기다, 껍질" },
+      { en: "onion", ko: "양파" },
+      { en: "ingredient", ko: "재료, 원료" }
+    ]
+  },
+  {
+    id: "u8l2", unit: 8, name: "Lesson 2 · Giggle Gaggle Cooking Contest",
+    words: [
+      { en: "egg", ko: "달걀" },
+      { en: "hen", ko: "암탉" },
+      { en: "well", ko: "잘" },
+      { en: "happy", ko: "행복한" },
+      { en: "tooth", ko: "이, 치아" },
+      { en: "enough", ko: "충분한" },
+      { en: "mix", ko: "섞다, 혼합하다" },
+      { en: "pot", ko: "냄비" },
+      { en: "chef", ko: "주방장" },
+      { en: "topic", ko: "주제" },
+      { en: "simmer", ko: "끓이다" },
+      { en: "fridge", ko: "냉장고" }
+    ]
+  },
+  {
+    id: "u9l1", unit: 9, name: "Lesson 1 · In the Emergency Room",
+    words: [
+      { en: "hurt", ko: "다치게 하다, 아프다" },
+      { en: "stay", ko: "머무르다" },
+      { en: "worry", ko: "걱정하다" },
+      { en: "hospital", ko: "병원" },
+      { en: "treat", ko: "치료하다, 처치하다" },
+      { en: "crowded", ko: "붐비는, 복잡한" },
+      { en: "patient", ko: "환자" },
+      { en: "headache", ko: "두통" },
+      { en: "emergency", ko: "긴급한, 위급, 비상" },
+      { en: "bleed", ko: "피가 나다" },
+      { en: "bandage", ko: "붕대" },
+      { en: "symptom", ko: "증상" }
+    ]
+  },
+  {
+    id: "u9l2", unit: 9, name: "Lesson 2 · Lucy Becomes a Doctor",
+    words: [
+      { en: "ill", ko: "아픈" },
+      { en: "be able to", ko: "~할 수 있다" },
+      { en: "excellent", ko: "훌륭한, 대단한" },
+      { en: "take a rest", ko: "쉬다" },
+      { en: "fall in love", ko: "사랑에 빠지다" },
+      { en: "stomachache", ko: "복통" },
+      { en: "pretend", ko: "~인 체하다" },
+      { en: "instead of", ko: "~ 대신에" },
+      { en: "clinic", ko: "개인병원" },
+      { en: "disguise", ko: "변장시키다, 속이다" },
+      { en: "give a shot", ko: "주사를 놓다" },
+      { en: "prescribe", ko: "처방하다" }
+    ]
+  },
+  {
+    id: "u10l1", unit: 10, name: "Lesson 1 · Why Do People Like Roller Coasters?",
+    words: [
+      { en: "top", ko: "꼭대기" },
+      { en: "guess", ko: "추측하다, 추측" },
+      { en: "rider", ko: "타는 사람" },
+      { en: "which", ko: "어느 것, 어느" },
+      { en: "because", ko: "~ 때문에" },
+      { en: "fear", ko: "공포, 무서워하다" },
+      { en: "while", ko: "~하는 동안" },
+      { en: "located", ko: "~에 위치한" },
+      { en: "increase", ko: "증가하다" },
+      { en: "rapidly", ko: "빠르게, 급격하게" },
+      { en: "thrill", ko: "전율, 흥분, 설렘" },
+      { en: "at the same time", ko: "동시에" }
+    ]
+  },
+  {
+    id: "u10l2", unit: 10, name: "Lesson 2 · An Adventure with a Genie",
+    words: [
+      { en: "buy", ko: "사다" },
+      { en: "gate", ko: "출입문, 대문" },
+      { en: "seat", ko: "좌석, 자리" },
+      { en: "thirsty", ko: "목마른" },
+      { en: "yesterday", ko: "어제" },
+      { en: "lamp", ko: "등불, 램프" },
+      { en: "steal", ko: "훔치다" },
+      { en: "escape", ko: "탈출하다, 탈출" },
+      { en: "moment", ko: "순간" },
+      { en: "imagine", ko: "상상하다" },
+      { en: "adventure", ko: "모험" },
+      { en: "maze", ko: "미로" }
+    ]
+  }
+];
+
+const ALL_WORDS = LESSONS.flatMap(l => l.words);
+
+// ===== 상태 =====
+let state = {};
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-US";
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+
+const app = document.getElementById("app");
+const APP_VERSION = "v1.0 (2026-07-17)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
+
+// ===== 시험 기록 (localStorage) =====
+const MODE_LABELS = { meaning: "📖 기본", spelling: "🔥 고난도", writing: "✍️ 최고난도" };
+const HISTORY_KEY = "yuha-quiz-history";
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); }
+  catch (e) { return []; }
+}
+function saveHistoryEntry(entry) {
+  const h = loadHistory();
+  h.unshift(entry);
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0, 50))); } catch (e) {}
+}
+function fmtDate(ts) {
+  const d = new Date(ts);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`;
+}
+function historyHTML() {
+  const h = loadHistory();
+  return `
+    <div class="history-section">
+      <div class="history-title">
+        <span>📜 시험 기록</span>
+        ${h.length ? `<button class="btn-clear-history" id="btn-clear-history">기록 지우기</button>` : ""}
+      </div>
+      ${h.length ? `<div class="history-list">
+        ${h.map(e => `
+          <div class="history-item">
+            <span class="h-mode">${MODE_LABELS[e.mode] || e.mode}</span>
+            <span class="h-score">${e.accuracy}% · ⭕${e.correct} ❌${e.attempts - e.correct}</span>
+            <span class="h-range">${e.range}</span>
+            <span class="h-date">${fmtDate(e.date)}</span>
+          </div>`).join("")}
+      </div>`
+      : `<div class="history-empty">아직 시험 기록이 없어요. 첫 시험을 쳐 보세요!</div>`}
+    </div>`;
+}
+
+// ===== 오답 통계 (누적, localStorage) =====
+const WRONG_STATS_KEY = "yuha-wrong-stats";
+
+function loadWrongStats() {
+  try { return JSON.parse(localStorage.getItem(WRONG_STATS_KEY) || "{}"); }
+  catch (e) { return {}; }
+}
+function bumpWrongStat(en, delta) {
+  const stats = loadWrongStats();
+  const next = (stats[en] || 0) + delta;
+  if (next <= 0) delete stats[en];
+  else stats[en] = next;
+  try { localStorage.setItem(WRONG_STATS_KEY, JSON.stringify(stats)); } catch (e) {}
+}
+// 자주 틀리는 단어: 많이 틀린 순, 최대 20개
+function reviewWords() {
+  const stats = loadWrongStats();
+  return ALL_WORDS.filter(w => stats[w.en] > 0)
+    .sort((a, b) => stats[b.en] - stats[a.en])
+    .slice(0, 20);
+}
+
+// ===== 시작 화면 =====
+function renderStart() {
+  state = {};
+  speechSynthesis && speechSynthesis.cancel();
+  app.innerHTML = `
+    <h1>📝 유하의 영어 시험</h1>
+    <p class="subtitle">모드와 레슨을 고르고 시험을 시작하세요 <span style="color:#ccc;font-size:.72rem">${APP_VERSION}</span></p>
+    <div class="section-label">시험 모드</div>
+    <div class="mode-list">
+      <label class="mode-item selected">
+        <input type="radio" name="mode" value="meaning" checked>
+        <span class="mode-name">📖 기본</span>
+        <span class="mode-desc">단어 보고<br>뜻 고르기</span>
+      </label>
+      <label class="mode-item">
+        <input type="radio" name="mode" value="spelling">
+        <span class="mode-name">🔥 고난도</span>
+        <span class="mode-desc">뜻 보고<br>스펠링 고르기</span>
+      </label>
+      <label class="mode-item">
+        <input type="radio" name="mode" value="writing">
+        <span class="mode-name">✍️ 최고난도</span>
+        <span class="mode-desc">뜻 보고<br>노트에 직접 쓰기</span>
+      </label>
+    </div>
+    <div class="range-head">
+      <span class="section-label">시험 범위</span>
+      <button class="btn-toggle-all" id="btn-toggle-all">전체 선택/해제</button>
+    </div>
+    <div class="lesson-list">
+      ${[...new Set(LESSONS.map(l => l.unit))].map(u => `
+        <label class="unit-head">
+          <input type="checkbox" class="unit-check" data-unit="${u}" checked> Unit ${u}
+        </label>
+        ${LESSONS.filter(l => l.unit === u).map(l => `
+        <label class="lesson-item">
+          <input type="checkbox" value="${l.id}" data-unit="${u}" checked>
+          <span class="name">${l.name}</span>
+          <span class="count">${l.words.length}단어</span>
+        </label>`).join("")}`).join("")}
+    </div>
+    <label class="option-row">
+      <input type="checkbox" id="opt-tts" checked>
+      <span>🔊 단어 발음 자동으로 들려주기 (고난도 모드는 정답 확인 후)</span>
+    </label>
+    <button class="btn-primary" id="btn-start">시험 시작!</button>
+    ${(() => {
+      const rw = reviewWords();
+      const stats = loadWrongStats();
+      return `
+      <div class="range-head" style="margin-top:24px">
+        <span class="section-label">복습</span>
+        ${rw.length ? `<button class="btn-clear-history" id="btn-clear-stats">오답 통계 지우기</button>` : ""}
+      </div>
+      ${rw.length
+        ? `<button class="btn-review" id="btn-review">🔁 자주 틀리는 단어만 풀기 (${rw.length}단어)</button>
+           <div class="review-hint">많이 틀린 단어: ${rw.slice(0, 5).map(w => `${w.en} ${stats[w.en]}회`).join(" · ")}</div>`
+        : `<div class="history-empty">아직 오답 데이터가 없어요. 시험에서 틀린 단어가 여기에 자동으로 모여요.</div>`}`;
+    })()}
+    ${historyHTML()}
+  `;
+  const boxes = [...app.querySelectorAll('.lesson-item input')];
+  const startBtn = document.getElementById("btn-start");
+  const update = () => { startBtn.disabled = !boxes.some(b => b.checked); };
+  const unitChecks = [...app.querySelectorAll(".unit-check")];
+  const syncUnits = () => unitChecks.forEach(u => {
+    u.checked = boxes.filter(b => b.dataset.unit === u.dataset.unit).every(b => b.checked);
+  });
+  boxes.forEach(b => b.addEventListener("change", () => { syncUnits(); update(); }));
+  unitChecks.forEach(u => u.addEventListener("change", () => {
+    boxes.filter(b => b.dataset.unit === u.dataset.unit).forEach(b => { b.checked = u.checked; });
+    update();
+  }));
+  document.getElementById("btn-toggle-all").addEventListener("click", () => {
+    const turnOn = boxes.some(b => !b.checked);
+    boxes.forEach(b => { b.checked = turnOn; });
+    syncUnits(); update();
+  });
+  const modeInputs = [...app.querySelectorAll('.mode-item input')];
+  modeInputs.forEach(r => r.addEventListener("change", () => {
+    app.querySelectorAll('.mode-item').forEach(el => el.classList.remove("selected"));
+    r.closest(".mode-item").classList.add("selected");
+  }));
+  startBtn.addEventListener("click", () => {
+    const selected = boxes.filter(b => b.checked).map(b => b.value);
+    const words = LESSONS.filter(l => selected.includes(l.id)).flatMap(l => l.words);
+    const mode = modeInputs.find(r => r.checked).value;
+    const range = selected.length === LESSONS.length
+      ? "전체" : selected.map(id => id.toUpperCase()).join(" ");
+    startQuiz(words, document.getElementById("opt-tts").checked, mode, range);
+  });
+  const clearBtn = document.getElementById("btn-clear-history");
+  if (clearBtn) clearBtn.addEventListener("click", () => {
+    if (confirm("시험 기록을 모두 지울까요?")) {
+      localStorage.removeItem(HISTORY_KEY);
+      renderStart();
+    }
+  });
+  const reviewBtn = document.getElementById("btn-review");
+  if (reviewBtn) reviewBtn.addEventListener("click", () => {
+    const mode = modeInputs.find(r => r.checked).value;
+    startQuiz(reviewWords(), document.getElementById("opt-tts").checked, mode, "복습", true);
+  });
+  const clearStatsBtn = document.getElementById("btn-clear-stats");
+  if (clearStatsBtn) clearStatsBtn.addEventListener("click", () => {
+    if (confirm("오답 통계를 모두 지울까요? 복습 목록이 비워집니다.")) {
+      localStorage.removeItem(WRONG_STATS_KEY);
+      renderStart();
+    }
+  });
+}
+
+// ===== 퀴즈 시작 =====
+function startQuiz(words, tts, mode, range, isReview) {
+  state = {
+    tts,
+    mode: mode || "meaning",
+    range: range || "전체",
+    isReview: !!isReview,
+    totalWords: words.length,
+    round: 1,
+    queue: shuffle(words),
+    idx: 0,
+    wrongThisRound: [],
+    totalAttempts: 0,
+    totalCorrect: 0,
+    wrongCount: {},   // en -> 틀린 횟수
+    answered: false
+  };
+  renderQuestion();
+}
+
+function currentWord() { return state.queue[state.idx]; }
+
+// 뜻이 겹치는 단어(예: get to·reach 둘 다 "도착하다")가 보기에 함께 나와
+// 정답이 2개가 되는 것을 방지
+function koTokens(ko) {
+  return ko.split(/[,\/()~]/).map(s => s.trim()).filter(Boolean);
+}
+function koOverlap(a, b) {
+  const A = koTokens(a);
+  return koTokens(b).some(t => A.includes(t));
+}
+
+function makeChoices(word) {
+  const others = shuffle(ALL_WORDS.filter(w => !koOverlap(w.ko, word.ko)));
+  const distractors = [];
+  const used = new Set([word.ko]);
+  for (const o of others) {
+    if (!used.has(o.ko)) { distractors.push(o.ko); used.add(o.ko); }
+    if (distractors.length === 3) break;
+  }
+  return shuffle([word.ko, ...distractors]);
+}
+
+// 오타가 우연히 부적절한 단어가 되는 것 방지
+const BAD_FORMS = new Set(["coon","fag","fap","ass","arse","anus","sex","tit","tits","cok",
+  "cock","dick","cum","hoe","slut","homo","nig","chink","spic","kike","paki","pusy","pussy",
+  "boob","boobs","butt","poo","pee","piss","crap","damn","hell"]);
+
+// 그럴듯한 오타 스펠링 생성 (실제 단어와 겹치지 않게)
+function misspell(word) {
+  const vowels = "aeiou";
+  const simMap = { c:"k", k:"c", s:"c", g:"j", j:"g", l:"r", r:"l",
+                   m:"n", n:"m", t:"d", d:"t", p:"b", b:"p", f:"ph", v:"b", w:"wh" };
+  const idxs = [...word].map((c, i) => /[a-z]/.test(c) ? i : -1).filter(i => i >= 0);
+  for (let t = 0; t < 40; t++) {
+    const strat = Math.floor(Math.random() * 5);
+    const chars = [...word];
+    const i = idxs[Math.floor(Math.random() * idxs.length)];
+    if (strat === 0) {            // 이웃 글자 순서 바꾸기
+      if (!idxs.includes(i + 1)) continue;
+      [chars[i], chars[i + 1]] = [chars[i + 1], chars[i]];
+      if (chars[i] === chars[i + 1]) continue;
+    } else if (strat === 1) {     // 글자 하나 겹치기
+      chars.splice(i, 0, chars[i]);
+    } else if (strat === 2) {     // 모음 바꾸기
+      if (!vowels.includes(chars[i])) continue;
+      const others = vowels.replace(chars[i], "");
+      chars[i] = others[Math.floor(Math.random() * others.length)];
+    } else if (strat === 3) {     // 글자 하나 빼기
+      if (idxs.length <= 3) continue;
+      chars.splice(i, 1);
+    } else {                      // 발음 비슷한 자음으로 바꾸기
+      if (!(chars[i] in simMap)) continue;
+      chars[i] = simMap[chars[i]];
+    }
+    const cand = chars.join("");
+    if (cand !== word
+        && !ALL_WORDS.some(w => w.en === cand)
+        && !cand.split(/[^a-z]+/).some(tok => BAD_FORMS.has(tok))) return cand;
+  }
+  return word + word[word.length - 1]; // 안전장치
+}
+
+// 고난도: [정답, 정답의 오타] + [다른 단어, 그 단어의 오타] 2묶음 구성
+function makeSpellingChoices(word) {
+  for (let t = 0; t < 10; t++) {
+    const other = shuffle(ALL_WORDS.filter(w => w.en !== word.en && !koOverlap(w.ko, word.ko)))[0];
+    const set = [word.en, misspell(word.en), other.en, misspell(other.en)];
+    if (new Set(set).size === 4) return shuffle(set);
+  }
+  // 중복 발생 시 안전장치: 기본 구성으로
+  const others = shuffle(ALL_WORDS.filter(w => w.en !== word.en)).slice(0, 2).map(w => w.en);
+  return shuffle([word.en, misspell(word.en), ...others]);
+}
+
+// ===== 문제 화면 =====
+function renderQuestion() {
+  const w = currentWord();
+  const spelling = state.mode === "spelling";
+  const writing = state.mode === "writing";
+  const choices = writing ? [] : (spelling ? makeSpellingChoices(w) : makeChoices(w));
+  state.answered = false;
+  state.revealed = false;
+  state.currentChoices = choices;
+  state.correctValue = (spelling || writing) ? w.en : w.ko;
+
+  const progress = (state.idx / state.queue.length) * 100;
+  const isRetry = state.round > 1;
+
+  app.innerHTML = `
+    <div class="top-bar">
+      <span class="round-badge ${isRetry ? "retry" : ""}">
+        ${isRetry ? `🔁 오답 다시 풀기 (${state.round}차)` : "1차 시험"}
+      </span>
+      <button class="btn-restart" id="btn-restart">⟲ 처음부터</button>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
+    <div class="progress-text">${state.idx + 1} / ${state.queue.length}</div>
+    <div class="score-line">
+      <span class="sc-ok">⭕ 맞음 ${state.totalCorrect}</span>
+      <span class="sc-no">❌ 틀림 ${state.totalAttempts - state.totalCorrect}</span>
+    </div>
+    <div class="word-box">
+      <div class="word">
+        <span>${(spelling || writing) ? w.ko : w.en}</span>
+        ${(spelling || writing) ? "" : `<button class="btn-speak" id="btn-speak" title="발음 듣기">🔊</button>`}
+      </div>
+      <div class="word-hint">${writing ? "아래 칸에 스펠링을 쓰세요 ✏️ (태블릿 손글씨 입력 가능)" : spelling ? "알맞은 영어 스펠링을 고르세요 (키보드 1~4)" : "알맞은 뜻을 고르세요 (키보드 1~4)"}</div>
+    </div>
+    ${writing ? `
+    <input type="text" class="write-input" id="write-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="스펠링 쓰기">
+    <div class="write-hint">태블릿에선 손글씨 키보드로 쓰면 글자로 바뀌어요</div>
+    <button class="btn-next" id="btn-submit">제출 (Enter)</button>
+    <button class="btn-alt" id="btn-reveal">✏️ 노트에 썼어요 — 정답 보고 직접 채점하기</button>
+    <div id="reveal-area"></div>
+    ` : `
+    <div class="choices">
+      ${choices.map((c, i) => `
+        <button class="choice" data-i="${i}">
+          <span class="num">${i + 1}</span><span>${c}</span>
+        </button>`).join("")}
+    </div>
+    <div class="feedback" id="feedback"></div>`}
+  `;
+
+  document.getElementById("btn-restart").addEventListener("click", confirmRestart);
+  const speakBtn = document.getElementById("btn-speak");
+  if (speakBtn) speakBtn.addEventListener("click", () => speak(w.en));
+  const revealBtn = document.getElementById("btn-reveal");
+  if (revealBtn) revealBtn.addEventListener("click", revealAnswer);
+  const submitBtn = document.getElementById("btn-submit");
+  if (submitBtn) submitBtn.addEventListener("click", submitWriting);
+  const writeInp = document.getElementById("write-input");
+  if (writeInp) writeInp.focus();
+  app.querySelectorAll(".choice").forEach(btn =>
+    btn.addEventListener("click", () => answer(parseInt(btn.dataset.i)))
+  );
+  if (state.tts && state.mode === "meaning") speak(w.en); // 스펠링 모드에선 문제 낼 때 읽어주지 않음(힌트 방지)
+}
+
+// ===== 최고난도(쓰기) 모드: 입력 답 자동 채점 =====
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+// 대소문자·아포스트로피·띄어쓰기는 스펠링 실수로 치지 않음
+// (펜 손글씨 입력 시 띄어쓰기가 어긋나는 경우가 많아 공백은 전부 무시하고 글자만 비교)
+function normalizeAns(s) {
+  return s.toLowerCase().replace(/['’]/g, "").replace(/[^a-z]+/g, "");
+}
+// "get in[on]" 같은 괄호 표기는 두 가지 답 모두 인정
+function acceptedAnswers(en) {
+  const set = new Set([normalizeAns(en)]);
+  const m = en.match(/^(.*)\[(.+)\](.*)$/);
+  if (m) {
+    set.add(normalizeAns(m[1] + m[3]));
+    const base = m[1].trim().split(" ");
+    base[base.length - 1] = m[2];
+    set.add(normalizeAns(base.join(" ") + m[3]));
+  }
+  return set;
+}
+
+function submitWriting() {
+  if (state.answered || state.revealed) return;
+  const inp = document.getElementById("write-input");
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) { inp.focus(); return; }
+  state.answered = true;
+  const w = currentWord();
+  const correct = acceptedAnswers(w.en).has(normalizeAns(val));
+
+  state.totalAttempts++;
+  if (correct) {
+    state.totalCorrect++;
+    if (state.round === 1 && state.isReview) bumpWrongStat(w.en, -1);
+  } else {
+    state.wrongThisRound.push(w);
+    state.wrongCount[w.en] = (state.wrongCount[w.en] || 0) + 1;
+    if (state.round === 1) bumpWrongStat(w.en, +1);
+  }
+
+  inp.disabled = true;
+  document.getElementById("btn-submit").style.display = "none";
+  document.getElementById("btn-reveal").style.display = "none";
+  document.getElementById("reveal-area").innerHTML = `
+    <div class="answer-reveal">
+      <div class="feedback ${correct ? "ok" : "no"}" style="margin-top:0; margin-bottom:10px">${correct ? "⭕ 정답입니다!" : "❌ 틀렸어요!"}</div>
+      ${correct ? "" : `<div class="my-answer">내가 쓴 답: <b>${escapeHtml(val)}</b></div>`}
+      <div class="answer-label">정답 스펠링</div>
+      <div class="answer-word"><span>${w.en}</span><button class="btn-speak" id="btn-speak2" title="발음 듣기">🔊</button></div>
+    </div>
+    <button class="btn-next" id="btn-next">${state.idx === state.queue.length - 1 && state.wrongThisRound.length === 0 ? "결과 보기 →" : "다음 문제 → (Enter)"}</button>`;
+  document.getElementById("btn-speak2").addEventListener("click", () => speak(w.en));
+  const nextBtn = document.getElementById("btn-next");
+  nextBtn.addEventListener("click", nextQuestion);
+  nextBtn.focus();
+  if (state.tts) speak(w.en);
+}
+
+// ===== 최고난도(쓰기) 모드: 노트에 쓴 경우 — 정답 공개 → 스스로 채점 =====
+function revealAnswer() {
+  if (state.revealed) return;
+  const btn = document.getElementById("btn-reveal");
+  if (!btn) return;
+  state.revealed = true;
+  btn.style.display = "none";
+  const inp = document.getElementById("write-input");
+  if (inp) inp.disabled = true;
+  const sub = document.getElementById("btn-submit");
+  if (sub) sub.style.display = "none";
+  const w = currentWord();
+  document.getElementById("reveal-area").innerHTML = `
+    <div class="answer-reveal">
+      <div class="answer-label">정답 스펠링</div>
+      <div class="answer-word"><span>${w.en}</span><button class="btn-speak" id="btn-speak2" title="발음 듣기">🔊</button></div>
+      <div class="self-check-q">노트에 쓴 스펠링과 똑같나요? 스스로 채점하세요!</div>
+      <div class="self-check">
+        <button class="btn-self ok" id="btn-self-ok">⭕ 맞았어요 (1)</button>
+        <button class="btn-self no" id="btn-self-no">❌ 틀렸어요 (2)</button>
+      </div>
+    </div>`;
+  document.getElementById("btn-speak2").addEventListener("click", () => speak(w.en));
+  document.getElementById("btn-self-ok").addEventListener("click", () => selfCheck(true));
+  document.getElementById("btn-self-no").addEventListener("click", () => selfCheck(false));
+  if (state.tts) speak(w.en);
+}
+
+function selfCheck(correct) {
+  if (state.answered || !state.revealed) return;
+  state.answered = true;
+  const w = currentWord();
+  state.totalAttempts++;
+  if (correct) {
+    state.totalCorrect++;
+    if (state.round === 1 && state.isReview) bumpWrongStat(w.en, -1); // 복습에서 맞히면 통계 감소
+  } else {
+    state.wrongThisRound.push(w);
+    state.wrongCount[w.en] = (state.wrongCount[w.en] || 0) + 1;
+    if (state.round === 1) bumpWrongStat(w.en, +1); // 오답 통계 누적 (오답 라운드는 제외)
+  }
+  nextQuestion();
+}
+
+// ===== 답변 처리 =====
+function answer(i) {
+  if (state.answered) return;
+  state.answered = true;
+
+  const w = currentWord();
+  const picked = state.currentChoices[i];
+  const correct = picked === state.correctValue;
+
+  state.totalAttempts++;
+  if (correct) {
+    state.totalCorrect++;
+    if (state.round === 1 && state.isReview) bumpWrongStat(w.en, -1); // 복습에서 맞히면 통계 감소
+  } else {
+    state.wrongThisRound.push(w);
+    state.wrongCount[w.en] = (state.wrongCount[w.en] || 0) + 1;
+    if (state.round === 1) bumpWrongStat(w.en, +1); // 오답 통계 누적 (오답 라운드는 제외)
+  }
+
+  const btns = [...app.querySelectorAll(".choice")];
+  btns.forEach((b, j) => {
+    b.disabled = true;
+    const val = state.currentChoices[j];
+    if (val === state.correctValue) b.classList.add("correct");
+    else if (j === i) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+
+  const fb = document.getElementById("feedback");
+  fb.className = "feedback " + (correct ? "ok" : "no");
+  fb.textContent = correct ? "⭕ 정답입니다!" : `❌ 틀렸어요! 정답: ${state.correctValue}`;
+  if (state.tts && state.mode === "spelling") speak(w.en); // 정답 확인 후 발음 들려주기
+
+  const next = document.createElement("button");
+  next.className = "btn-next";
+  next.id = "btn-next";
+  const isLast = state.idx === state.queue.length - 1;
+  next.textContent = isLast ? "결과 보기 →" : "다음 문제 → (Enter)";
+  next.addEventListener("click", nextQuestion);
+  fb.after(next);
+  next.focus();
+}
+
+function nextQuestion() {
+  state.idx++;
+  if (state.idx < state.queue.length) {
+    renderQuestion();
+  } else if (state.wrongThisRound.length > 0) {
+    // 오답 라운드 시작
+    state.round++;
+    state.queue = shuffle(state.wrongThisRound);
+    state.wrongThisRound = [];
+    state.idx = 0;
+    renderQuestion();
+  } else {
+    renderResult();
+  }
+}
+
+// ===== 결과 화면 =====
+function renderResult() {
+  speechSynthesis && speechSynthesis.cancel();
+  const wrongEntries = Object.entries(state.wrongCount)
+    .sort((a, b) => b[1] - a[1]);
+  const accuracy = state.totalAttempts
+    ? Math.round((state.totalCorrect / state.totalAttempts) * 100) : 0;
+  const perfect = wrongEntries.length === 0;
+
+  saveHistoryEntry({
+    date: Date.now(),
+    mode: state.mode,
+    range: state.range,
+    words: state.totalWords,
+    attempts: state.totalAttempts,
+    correct: state.totalCorrect,
+    accuracy,
+    rounds: state.round
+  });
+
+  app.innerHTML = `
+    <div class="result-emoji">${perfect ? "🏆" : accuracy >= 80 ? "🎉" : "💪"}</div>
+    <div class="result-title">${perfect ? "완벽해요! 한 번에 다 맞혔어요!" : "모든 단어를 다 맞혔어요!"}</div>
+    <div class="stats">
+      <div class="stat"><div class="val" style="color:#27ae60">${state.totalCorrect}</div><div class="label">⭕ 맞음</div></div>
+      <div class="stat"><div class="val" style="color:#e74c3c">${state.totalAttempts - state.totalCorrect}</div><div class="label">❌ 틀림</div></div>
+      <div class="stat"><div class="val">${accuracy}%</div><div class="label">정답률</div></div>
+      <div class="stat"><div class="val">${state.round}</div><div class="label">라운드</div></div>
+    </div>
+    ${perfect
+      ? `<p class="perfect-msg">틀린 단어가 하나도 없어요 👏</p>`
+      : `<div class="wrong-list-title">📌 틀렸던 단어 (복습하세요!)</div>
+         <div class="wrong-list">
+           ${wrongEntries.map(([en, cnt]) => {
+             const w = ALL_WORDS.find(x => x.en === en);
+             return `<div class="wrong-item">
+               <span class="en">${en}</span>
+               <span><span class="ko">${w.ko}</span><span class="cnt">${cnt}회 틀림</span></span>
+             </div>`;
+           }).join("")}
+         </div>`}
+    <button class="btn-primary" id="btn-again">처음부터 다시 하기</button>
+  `;
+  document.getElementById("btn-again").addEventListener("click", renderStart);
+}
+
+function confirmRestart() {
+  if (confirm("정말 처음부터 다시 시작할까요? 지금까지의 진행이 사라집니다.")) {
+    renderStart();
+  }
+}
+
+// ===== 키보드 단축키 =====
+document.addEventListener("keydown", e => {
+  if (!state.queue) return;
+  if (state.mode === "writing") {
+    if (e.key === "Enter") {
+      if (!state.answered && !state.revealed) submitWriting(); // 입력이 비어 있으면 무시됨
+      else if (state.answered && document.getElementById("btn-next")
+               && document.activeElement !== document.getElementById("btn-next")) nextQuestion();
+    } else if (state.revealed && !state.answered && document.activeElement !== document.getElementById("write-input")) {
+      if (e.key === "1") selfCheck(true);
+      else if (e.key === "2") selfCheck(false);
+    }
+    return;
+  }
+  if (e.key >= "1" && e.key <= "4" && !state.answered) {
+    const i = parseInt(e.key) - 1;
+    const btn = app.querySelector(`.choice[data-i="${i}"]`);
+    if (btn) answer(i);
+  } else if (e.key === "Enter" && state.answered) {
+    const btn = document.getElementById("btn-next");
+    if (btn && document.activeElement !== btn) nextQuestion();
+  }
+});
+
+renderStart();
+
+// PWA: 홈 화면 설치 + 오프라인 지원 (업데이트는 네트워크 우선이라 자동 반영)
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
