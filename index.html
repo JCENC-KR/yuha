@@ -607,7 +607,7 @@ function speak(text) {
 }
 
 const app = document.getElementById("app");
-const APP_VERSION = "v1.2 (2026-07-19)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
+const APP_VERSION = "v1.3 (2026-07-19)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
 
 // ===== 시험 기록 (localStorage) =====
 const MODE_LABELS = { meaning: "📖 기본", spelling: "🔥 고난도", writing: "✍️ 최고난도" };
@@ -723,7 +723,7 @@ function renderStart() {
     </div>
     <label class="option-row">
       <input type="checkbox" id="opt-tts" checked>
-      <span>🔊 단어 발음 자동으로 들려주기 (고난도 모드는 정답 확인 후)</span>
+      <span>🔊 문제가 나올 때도 미리 읽어주기 (기본 모드만 · 정답 확인 때는 항상 자동 재생)</span>
     </label>
     <button class="btn-primary" id="btn-start">시험 시작!</button>
     ${(() => {
@@ -1055,7 +1055,7 @@ function submitWriting() {
   const nextBtn = document.getElementById("btn-next");
   nextBtn.addEventListener("click", nextQuestion);
   nextBtn.focus();
-  if (state.tts) speak(w.en);
+  speak(w.en); // 정답 제출 시 항상 자동으로 발음 재생
 }
 
 // ===== 최고난도(쓰기) 모드: 노트에 쓴 경우 — 정답 공개 → 스스로 채점 =====
@@ -1083,7 +1083,7 @@ function revealAnswer() {
   document.getElementById("btn-speak2").addEventListener("click", () => speak(w.en));
   document.getElementById("btn-self-ok").addEventListener("click", () => selfCheck(true));
   document.getElementById("btn-self-no").addEventListener("click", () => selfCheck(false));
-  if (state.tts) speak(w.en);
+  speak(w.en); // 정답 공개 시 항상 자동으로 발음 재생
 }
 
 function selfCheck(correct) {
@@ -1133,7 +1133,7 @@ function answer(i) {
   const fb = document.getElementById("feedback");
   fb.className = "feedback " + (correct ? "ok" : "no");
   fb.textContent = correct ? "⭕ 정답입니다!" : `❌ 틀렸어요! 정답: ${state.correctValue}`;
-  if (state.tts && state.mode === "spelling") speak(w.en); // 정답 확인 후 발음 들려주기
+  speak(w.en); // 정답 제출 시 항상 자동으로 발음 재생
 
   const next = document.createElement("button");
   next.className = "btn-next";
