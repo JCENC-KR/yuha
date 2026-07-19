@@ -49,6 +49,8 @@
     background: linear-gradient(135deg, #f2994a, #f2c94c);
   }
   .btn-review:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(242,153,74,.4); }
+  .btn-recent { background: linear-gradient(135deg, #eb5757, #f2994a); }
+  .btn-recent:hover { box-shadow: 0 8px 20px rgba(235,87,87,.4); }
   .review-hint { font-size: .78rem; color: #b08968; margin-top: 8px; text-align: center; }
   .lesson-item {
     display: flex; align-items: center; gap: 10px;
@@ -590,7 +592,7 @@ function speak(text) {
 }
 
 const app = document.getElementById("app");
-const APP_VERSION = "v1.0 (2026-07-17)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
+const APP_VERSION = "v1.1 (2026-07-19)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
 
 // ===== 시험 기록 (localStorage) =====
 const MODE_LABELS = { meaning: "📖 기본", spelling: "🔥 고난도", writing: "✍️ 최고난도" };
@@ -654,6 +656,15 @@ function reviewWords() {
     .slice(0, 20);
 }
 
+// 최근 친 시험 3번에서 틀린 단어 모음 (중복 제거)
+function recentWrongWords() {
+  const ens = [];
+  loadHistory().slice(0, 3).forEach(e =>
+    (e.wrongWords || []).forEach(en => { if (!ens.includes(en)) ens.push(en); })
+  );
+  return ens.map(en => ALL_WORDS.find(w => w.en === en)).filter(Boolean);
+}
+
 // ===== 시작 화면 =====
 function renderStart() {
   state = {};
@@ -702,15 +713,17 @@ function renderStart() {
     <button class="btn-primary" id="btn-start">시험 시작!</button>
     ${(() => {
       const rw = reviewWords();
+      const recent = recentWrongWords();
       const stats = loadWrongStats();
       return `
       <div class="range-head" style="margin-top:24px">
         <span class="section-label">복습</span>
         ${rw.length ? `<button class="btn-clear-history" id="btn-clear-stats">오답 통계 지우기</button>` : ""}
       </div>
-      ${rw.length
-        ? `<button class="btn-review" id="btn-review">🔁 자주 틀리는 단어만 풀기 (${rw.length}단어)</button>
-           <div class="review-hint">많이 틀린 단어: ${rw.slice(0, 5).map(w => `${w.en} ${stats[w.en]}회`).join(" · ")}</div>`
+      ${(rw.length || recent.length)
+        ? `${recent.length ? `<button class="btn-review btn-recent" id="btn-recent">🕐 최근 시험 3번 오답 풀기 (${recent.length}단어)</button>` : ""}
+           ${rw.length ? `<button class="btn-review" id="btn-review" ${recent.length ? 'style="margin-top:8px"' : ""}>🔁 자주 틀리는 단어만 풀기 (누적 ${rw.length}단어)</button>
+           <div class="review-hint">많이 틀린 단어: ${rw.slice(0, 5).map(w => `${w.en} ${stats[w.en]}회`).join(" · ")}</div>` : ""}`
         : `<div class="history-empty">아직 오답 데이터가 없어요. 시험에서 틀린 단어가 여기에 자동으로 모여요.</div>`}`;
     })()}
     ${historyHTML()}
@@ -756,6 +769,11 @@ function renderStart() {
   if (reviewBtn) reviewBtn.addEventListener("click", () => {
     const mode = modeInputs.find(r => r.checked).value;
     startQuiz(reviewWords(), document.getElementById("opt-tts").checked, mode, "복습", true);
+  });
+  const recentBtn = document.getElementById("btn-recent");
+  if (recentBtn) recentBtn.addEventListener("click", () => {
+    const mode = modeInputs.find(r => r.checked).value;
+    startQuiz(recentWrongWords(), document.getElementById("opt-tts").checked, mode, "최근오답", true);
   });
   const clearStatsBtn = document.getElementById("btn-clear-stats");
   if (clearStatsBtn) clearStatsBtn.addEventListener("click", () => {
@@ -1106,7 +1124,8 @@ function renderResult() {
     attempts: state.totalAttempts,
     correct: state.totalCorrect,
     accuracy,
-    rounds: state.round
+    rounds: state.round,
+    wrongWords: Object.keys(state.wrongCount) // "최근 시험 오답 풀기"용
   });
 
   app.innerHTML = `
