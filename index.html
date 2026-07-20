@@ -872,7 +872,7 @@ function speak(text) {
 }
 
 const app = document.getElementById("app");
-const APP_VERSION = "v1.6 (2026-07-19)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
+const APP_VERSION = "v1.7 (2026-07-19)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
 
 // ===== 시험 기록 (localStorage) =====
 const MODE_LABELS = { meaning: "📖 기본", spelling: "🔥 고난도", writing: "✍️ 최고난도" };
@@ -886,6 +886,10 @@ function saveHistoryEntry(entry) {
   const h = loadHistory();
   h.unshift(entry);
   try { localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0, 50))); } catch (e) {}
+}
+function fmtDuration(sec) {
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return m ? `${m}분 ${s}초` : `${s}초`;
 }
 function fmtDate(ts) {
   const d = new Date(ts);
@@ -907,6 +911,7 @@ function historyHTML() {
             <span class="h-mode">${MODE_LABELS[e.mode] || e.mode}</span>
             <span class="h-score">${e.accuracy}% · ⭕${e.correct} ❌${e.attempts - e.correct}</span>
             <span class="h-range">${e.range}</span>
+            ${e.duration != null ? `<span class="h-range">⏱ ${fmtDuration(e.duration)}</span>` : ""}
             <span class="h-date">${fmtDate(e.date)}</span>
           </div>`).join("")}
       </div>`
@@ -1112,6 +1117,7 @@ function startQuiz(words, tts, mode, range, isReview) {
     range: range || "전체",
     isReview: !!isReview,
     totalWords: words.length,
+    startTime: Date.now(),
     round: 1,
     queue: shuffle(words),
     idx: 0,
@@ -1397,6 +1403,7 @@ function renderResult() {
     correct: state.totalCorrect,
     accuracy,
     rounds: state.round,
+    duration: Math.round((Date.now() - state.startTime) / 1000), // 걸린 시간(초)
     wrongWords: Object.keys(state.wrongCount) // "최근 시험 오답 풀기"용
   });
 
@@ -1409,6 +1416,7 @@ function renderResult() {
       <div class="stat"><div class="val">${accuracy}%</div><div class="label">정답률</div></div>
       <div class="stat"><div class="val">${state.round}</div><div class="label">라운드</div></div>
     </div>
+    <div style="text-align:center; color:#999; font-size:.88rem; margin:-8px 0 20px">⏱ 걸린 시간: ${fmtDuration(Math.round((Date.now() - state.startTime) / 1000))}</div>
     ${perfect
       ? `<p class="perfect-msg">틀린 단어가 하나도 없어요 👏</p>`
       : `<div class="wrong-list-title">📌 틀렸던 단어 (복습하세요!)</div>
