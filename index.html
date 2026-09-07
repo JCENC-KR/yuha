@@ -230,6 +230,22 @@
     margin-top: 12px; padding: 12px 14px; background: #f7f5ff; border-radius: 10px;
     font-size: .9rem; color: #5c4bad; line-height: 1.55;
   }
+  .q-out, .badge-out {
+    display: inline-block; background: #fff3e0; color: #c07a2b; border: 1px solid #f0d9b8;
+    font-size: .7rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; margin-left: 6px;
+    vertical-align: middle; white-space: nowrap;
+  }
+  .hist-why.out { background: #fff8ef; color: #b5722a; }
+  .out-note { font-size: .78rem; color: #c07a2b; line-height: 1.5; margin: 4px 0 16px; }
+  .count-list { display: flex; gap: 8px; margin-bottom: 16px; }
+  .count-item {
+    flex: 1; padding: 12px 6px; border: 2px solid #e5e0f5; border-radius: 12px;
+    cursor: pointer; transition: all .15s; user-select: none; text-align: center;
+    font-weight: 700; color: #6b6394; font-size: 1rem;
+  }
+  .count-item:hover { border-color: #b3a5e8; background: #f8f6ff; }
+  .count-item.selected { border-color: #667eea; background: #f3f0ff; color: #4a3b8c; }
+  .count-item input { display: none; }
   .unit-page { font-size: .72rem; color: #c3bce0; margin-left: 6px; font-weight: 500; }
   .hist-wrong-list { display: grid; gap: 10px; margin-bottom: 20px; }
   .hist-wrong-item { padding: 12px 14px; background: #fdf6f5; border-radius: 10px; border-left: 3px solid #e74c3c; }
@@ -905,7 +921,7 @@ function speak(text) {
 }
 
 const app = document.getElementById("app");
-const APP_VERSION = "v1.8 (2026-09-07)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
+const APP_VERSION = "v1.9 (2026-09-07)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
 
 // ===== 시험 기록 (localStorage) =====
 const MODE_LABELS = { meaning: "📖 기본", spelling: "🔥 고난도", writing: "✍️ 최고난도" };
@@ -1528,11 +1544,13 @@ const HIST_UNITS = [
       { q: "울주 대곡리 반구대 암각화에 새겨져 있지 않은 것은?",
         a: "한자로 쓴 기록",
         d: ["다양한 고래의 모습", "사냥하는 모습", "배를 탄 사람들"],
-        why: "선사 시대라 글자가 없어요. 그림만 새겨져 있습니다." },
+        why: "선사 시대라 글자가 없어요. 그림만 새겨져 있습니다.",
+        out: "교과서에 없는 것을 고르는 추론 문제예요" },
       { q: "'암각화'란 무엇인가요?",
         a: "바위에 새긴 그림",
         d: ["종이에 그린 그림", "흙을 구워 만든 그릇", "나무에 새긴 글자"],
-        why: "바위 암(巖) + 새길 각(刻) + 그림 화(畵)." },
+        why: "바위 암(巖) + 새길 각(刻) + 그림 화(畵).",
+        out: "낱말 뜻은 교과서에 안 나와요" },
       { q: "반구대 암각화가 있는 곳은 어디인가요?",
         a: "울산광역시 울주군",
         d: ["충청북도 제천시", "서울특별시 강동구", "경상북도 경주시"],
@@ -1626,11 +1644,13 @@ const HIST_UNITS = [
       { q: "가락바퀴는 무엇을 하는 도구인가요?",
         a: "실을 뽑는 도구",
         d: ["곡식을 가는 도구", "물고기를 잡는 도구", "나무를 자르는 도구"],
-        why: "뽑은 실로 옷을 만들어 입었어요." },
+        why: "뽑은 실로 옷을 만들어 입었어요.",
+        out: "교과서엔 사진과 이름만 나와요" },
       { q: "돌그물추와 뼈바늘로 알 수 있는 신석기 시대의 생활은?",
         a: "물고기를 잡고 옷을 지어 입었다",
         d: ["벼농사를 크게 지었다", "청동 거울로 제사를 지냈다", "철로 무기를 만들었다"],
-        why: "그물추 = 물고기잡이, 바늘 = 옷 만들기." },
+        why: "그물추 = 물고기잡이, 바늘 = 옷 만들기.",
+        out: "교과서엔 사진과 이름만 나와요" },
       { q: "신석기 시대 사람들의 생활 모습으로 알맞은 것은?",
         a: "한곳에 정착해 마을을 이루고 살았다",
         d: ["먹을 것을 찾아 늘 옮겨 다녔다", "청동 무기로 전쟁을 했다", "고인돌 무덤을 만들었다"],
@@ -1667,11 +1687,13 @@ const HIST_UNITS = [
       { q: "제사장이 반짝이는 청동 거울을 목에 걸고 있던 까닭은?",
         a: "자신이 특별하고 신성한 사람임을 드러내려고",
         d: ["얼굴을 비춰 보려고", "햇빛을 가리려고", "시간을 알아보려고"],
-        why: "청동 = 귀한 것 = 권위의 표시." },
+        why: "청동 = 귀한 것 = 권위의 표시.",
+        out: "교과서 말풍선 질문 — 답은 책에 안 나와요" },
       { q: "청동기 시대에 마을 둘레에 나무 울타리를 친 까닭은?",
         a: "다른 집단의 공격으로부터 마을을 지키려고",
         d: ["기르는 동물이 도망가지 못하게 하려고", "농사지을 땅을 나누려고", "바람을 막으려고"],
-        why: "힘센 집단이 약한 집단을 정복하던 시대라 방어가 필요했어요." },
+        why: "힘센 집단이 약한 집단을 정복하던 시대라 방어가 필요했어요.",
+        out: "교과서 말풍선 질문 — 답은 책에 안 나와요" },
       { q: "청동기 시대에 나타난 큰 사회 변화는?",
         a: "다른 사람들을 다스리는 지배자가 나타났다",
         d: ["모든 사람이 똑같이 평등해졌다", "문자를 사용하기 시작했다", "사람들이 다시 이동 생활을 했다"],
@@ -1679,7 +1701,8 @@ const HIST_UNITS = [
       { q: "고인돌은 무엇인가요?",
         a: "권력을 가진 지배자의 무덤",
         d: ["곡식을 저장하던 창고", "제사를 지내던 집", "마을을 지키던 망루"],
-        why: "무덤이라는 점을 꼭 기억하세요." },
+        why: "무덤이라는 점을 꼭 기억하세요.",
+        out: "교과서 말풍선 질문 — 답은 책에 안 나와요" },
       { q: "고인돌을 만드는 순서로 알맞은 것은?",
         a: "받침돌 세우기 → 흙을 쌓아 경사 만들기 → 덮개돌 끌어 올리기 → 흙 파내기",
         d: ["덮개돌 올리기 → 받침돌 세우기 → 흙 쌓기 → 흙 파내기",
@@ -1689,7 +1712,8 @@ const HIST_UNITS = [
       { q: "커다란 고인돌을 통해 알 수 있는 사실은?",
         a: "많은 사람을 동원할 수 있는 힘 있는 지배자가 있었다",
         d: ["모든 사람이 평등하게 살았다", "사람들이 이동 생활을 했다", "철기를 사용하고 있었다"],
-        why: "돌 하나 옮기는 데도 수십~수백 명이 필요해요." }
+        why: "돌 하나 옮기는 데도 수십~수백 명이 필요해요.",
+        out: "교과서 말풍선 질문 — 답은 책에 안 나와요" }
     ]
   },
   {
@@ -1918,8 +1942,16 @@ function renderHistStart() {
     <button class="btn-back-sub" id="btn-to-subject">← 과목 선택</button>
     <h1>🏺 유하의 한국사 시험</h1>
     <p class="subtitle">공부할 단원을 고르고 시험을 시작하세요 <span style="color:#ccc;font-size:.72rem">${APP_VERSION}</span></p>
+    <div class="section-label">문제 수</div>
+    <div class="count-list">
+      ${[10, 20, 30, 0].map(n => `
+        <label class="count-item ${n === 20 ? "selected" : ""}">
+          <input type="radio" name="histcount" value="${n}" ${n === 20 ? "checked" : ""}>
+          ${n ? n + "문제" : "전체"}
+        </label>`).join("")}
+    </div>
     <div class="range-head">
-      <span class="section-label">시험 범위</span>
+      <span class="section-label">시험 범위 (단원)</span>
       <button class="btn-toggle-all" id="btn-hist-toggle">전체 선택/해제</button>
     </div>
     <div class="lesson-list">
@@ -1934,6 +1966,9 @@ function renderHistStart() {
       <input type="checkbox" id="hist-opt-why" checked>
       <span>💡 정답을 확인할 때 해설도 같이 보여주기</span>
     </label>
+    <div class="out-note">📖 <b>책 밖</b> 표시가 붙은 ${HIST_ALL.filter(q => q.out).length}문제는
+      교과서에 답이 적혀 있지 않아요 (말풍선 발문·사진만 있는 유물).
+      수업에서 다루는 내용이지만 책에서 찾으면 안 나옵니다.</div>
     <button class="btn-primary" id="btn-hist-start">시험 시작!</button>
     <div class="range-head" style="margin-top:24px">
       <span class="section-label">복습</span>
@@ -1949,8 +1984,26 @@ function renderHistStart() {
   document.getElementById("btn-to-subject").addEventListener("click", renderSubject);
   const boxes = [...app.querySelectorAll(".lesson-item input")];
   const startBtn = document.getElementById("btn-hist-start");
-  const update = () => { startBtn.disabled = !boxes.some(b => b.checked); };
+  const countInputs = [...app.querySelectorAll('.count-item input')];
+  const pickedLimit = () => parseInt(countInputs.find(r => r.checked).value) || 0;
+  const availQs = () => {
+    const sel = boxes.filter(b => b.checked).map(b => b.value);
+    return HIST_ALL.filter(q => sel.includes(q.id.split("-")[0]));
+  };
+  const update = () => {
+    const avail = availQs().length;
+    const lim = pickedLimit();
+    const n = lim ? Math.min(lim, avail) : avail;
+    startBtn.disabled = avail === 0;
+    startBtn.textContent = avail ? `시험 시작! (${n}문제)` : "단원을 하나 이상 고르세요";
+  };
   boxes.forEach(b => b.addEventListener("change", update));
+  countInputs.forEach(r => r.addEventListener("change", () => {
+    app.querySelectorAll(".count-item").forEach(el => el.classList.remove("selected"));
+    r.closest(".count-item").classList.add("selected");
+    update();
+  }));
+  update();
   document.getElementById("btn-hist-toggle").addEventListener("click", () => {
     const turnOn = boxes.some(b => !b.checked);
     boxes.forEach(b => { b.checked = turnOn; });
@@ -1958,10 +2011,13 @@ function renderHistStart() {
   });
   startBtn.addEventListener("click", () => {
     const sel = boxes.filter(b => b.checked).map(b => b.value);
-    const qs = HIST_ALL.filter(q => sel.includes(q.id.split("-")[0]));
-    const range = sel.length === HIST_UNITS.length
+    const lim = pickedLimit();
+    // 단원을 고르고 → 그 안에서 섞은 뒤 → 정한 개수만큼 뽑는다
+    let qs = shuffle(availQs());
+    if (lim) qs = qs.slice(0, lim);
+    const unitPart = sel.length === HIST_UNITS.length
       ? "전체" : HIST_UNITS.filter(u => sel.includes(u.id)).map(u => u.name.slice(0, 1)).join("");
-    startHistQuiz(qs, range, false);
+    startHistQuiz(qs, `${unitPart} ${qs.length}문제`, false);
   });
   const b1 = document.getElementById("btn-hist-recent");
   if (b1) b1.addEventListener("click", () => startHistQuiz(histRecentWrongQs(), "최근오답", true));
@@ -2002,7 +2058,7 @@ function renderHistRanking() {
         <div class="rank-item ${i < 3 ? "top3" : ""}">
           <span class="rank-no">${i < 3 ? medals[i] : (i + 1)}</span>
           <div class="rank-word">
-            <div class="en" style="font-size:1rem;line-height:1.4">${escapeHtml(q.q)}</div>
+            <div class="en" style="font-size:1rem;line-height:1.4">${escapeHtml(q.q)}${q.out ? `<span class="badge-out">📖 책 밖</span>` : ""}</div>
             <div class="ko">정답: ${escapeHtml(q.a)}</div>
             ${q.why ? `<div class="rank-tip">💡 ${escapeHtml(q.why)}</div>` : ""}
             <div class="rank-bar"><div style="width:${Math.max(8, Math.round(stats[q.id] / max * 100))}%"></div></div>
@@ -2058,7 +2114,7 @@ function renderHistQuestion() {
       <span class="sc-no">❌ 틀림 ${state.totalAttempts - state.totalCorrect}</span>
     </div>
     <div class="q-box">
-      <div class="q-unit">${escapeHtml(q.unitName)}</div>
+      <div class="q-unit">${escapeHtml(q.unitName)}${q.out ? `<span class="q-out">📖 책 밖</span>` : ""}</div>
       <div class="q-text">${escapeHtml(q.q)}</div>
       <div class="word-hint">알맞은 답을 고르세요 (키보드 1~4)</div>
     </div>
@@ -2106,8 +2162,9 @@ function histAnswer(i) {
 
   if (state.showWhy && q.why) {
     const why = document.createElement("div");
-    why.className = "hist-why";
-    why.innerHTML = `💡 ${escapeHtml(q.why)}`;
+    why.className = "hist-why" + (q.out ? " out" : "");
+    why.innerHTML = (q.out ? `📖 <b>이 문제는 교과서에 답이 없어요</b> — ${escapeHtml(q.out)}<br>` : "")
+      + `💡 ${escapeHtml(q.why)}`;
     fb.after(why);
   }
 
@@ -2172,7 +2229,7 @@ function renderHistResult() {
            ${wrongEntries.map(([id, cnt]) => {
              const q = HIST_ALL.find(x => x.id === id);
              return `<div class="hist-wrong-item">
-               <div class="hw-q">${escapeHtml(q.q)} <span class="cnt">${cnt}회 틀림</span></div>
+               <div class="hw-q">${escapeHtml(q.q)}${q.out ? `<span class="badge-out">📖 책 밖</span>` : ""} <span class="cnt">${cnt}회 틀림</span></div>
                <div class="hw-a">✅ ${escapeHtml(q.a)}</div>
                ${q.why ? `<div class="hw-why">💡 ${escapeHtml(q.why)}</div>` : ""}
              </div>`;
