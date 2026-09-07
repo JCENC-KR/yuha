@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>유하의 영어 시험</title>
+<title>유하의 공부방</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#667eea">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -204,6 +204,39 @@
   .choice.wrong { border-color: #e74c3c; background: #fdedec; color: #c0392b; }
   .choice.wrong .num { background: #e74c3c; color: #fff; }
   .choice.dim { opacity: .45; }
+
+  /* ===== 과목 선택 ===== */
+  .subject-list { display: grid; gap: 14px; margin: 26px 0 10px; }
+  .subject-card {
+    display: flex; align-items: center; gap: 16px; text-align: left;
+    padding: 20px 18px; border-radius: 16px; border: 2px solid #e5e0f5; background: #fff;
+  }
+  .subject-card:hover { border-color: #a78bfa; background: #faf8ff; transform: translateY(-2px); }
+  .subject-card.hist:hover { border-color: #e0a458; background: #fffaf3; }
+  .subject-card .s-emoji { font-size: 2.4rem; flex-shrink: 0; }
+  .subject-card .s-text { display: flex; flex-direction: column; gap: 4px; }
+  .subject-card .s-name { font-size: 1.2rem; font-weight: 800; color: #2d2456; }
+  .subject-card .s-desc { font-size: .82rem; color: #999; line-height: 1.4; }
+  .btn-back-sub { background: none; color: #a99fd6; font-size: .85rem; padding: 4px 0; }
+  .btn-back-sub:hover { color: #7c6bd0; background: none; }
+
+  /* ===== 한국사 ===== */
+  .q-box { margin-bottom: 22px; }
+  .q-unit { font-size: .78rem; color: #b3a9dd; font-weight: 700; margin-bottom: 8px; }
+  .q-text { font-size: 1.25rem; font-weight: 800; color: #2d2456; line-height: 1.5; }
+  .q-box .word-hint { margin-top: 10px; }
+  .choice span:last-child { line-height: 1.45; }
+  .hist-why {
+    margin-top: 12px; padding: 12px 14px; background: #f7f5ff; border-radius: 10px;
+    font-size: .9rem; color: #5c4bad; line-height: 1.55;
+  }
+  .unit-page { font-size: .72rem; color: #c3bce0; margin-left: 6px; font-weight: 500; }
+  .hist-wrong-list { display: grid; gap: 10px; margin-bottom: 20px; }
+  .hist-wrong-item { padding: 12px 14px; background: #fdf6f5; border-radius: 10px; border-left: 3px solid #e74c3c; }
+  .hist-wrong-item .hw-q { font-weight: 700; color: #2d2456; font-size: .95rem; line-height: 1.45; }
+  .hist-wrong-item .hw-q .cnt { font-size: .75rem; color: #e74c3c; font-weight: 600; }
+  .hist-wrong-item .hw-a { margin-top: 6px; font-size: .9rem; color: #1e8449; }
+  .hist-wrong-item .hw-why { margin-top: 4px; font-size: .82rem; color: #999; line-height: 1.5; }
 
   .feedback { text-align: center; margin-top: 18px; min-height: 30px; font-weight: 700; font-size: 1.05rem; }
   .feedback.ok { color: #27ae60; }
@@ -872,7 +905,7 @@ function speak(text) {
 }
 
 const app = document.getElementById("app");
-const APP_VERSION = "v1.7 (2026-07-19)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
+const APP_VERSION = "v1.8 (2026-09-07)"; // 수정할 때마다 올려주면 업데이트 확인이 쉬움
 
 // ===== 시험 기록 (localStorage) =====
 const MODE_LABELS = { meaning: "📖 기본", spelling: "🔥 고난도", writing: "✍️ 최고난도" };
@@ -955,6 +988,7 @@ function renderStart() {
   state = {};
   speechSynthesis && speechSynthesis.cancel();
   app.innerHTML = `
+    <button class="btn-back-sub" id="btn-to-subject-eng">← 과목 선택</button>
     <h1>📝 유하의 영어 시험</h1>
     <p class="subtitle">모드와 레슨을 고르고 시험을 시작하세요 <span style="color:#ccc;font-size:.72rem">${APP_VERSION}</span></p>
     <div class="section-label">시험 모드</div>
@@ -1013,6 +1047,7 @@ function renderStart() {
     })()}
     ${historyHTML()}
   `;
+  document.getElementById("btn-to-subject-eng").addEventListener("click", renderSubject);
   const boxes = [...app.querySelectorAll('.lesson-item input')];
   const startBtn = document.getElementById("btn-start");
   const update = () => { startBtn.disabled = !boxes.some(b => b.checked); };
@@ -1443,6 +1478,16 @@ function confirmRestart() {
 // ===== 키보드 단축키 =====
 document.addEventListener("keydown", e => {
   if (!state.queue) return;
+  if (state.subject === "hist") {          // 한국사 모드
+    if (e.key >= "1" && e.key <= "4" && !state.answered) {
+      const i = parseInt(e.key) - 1;
+      if (app.querySelector(`.choice[data-i="${i}"]`)) histAnswer(i);
+    } else if (e.key === "Enter" && state.answered) {
+      const btn = document.getElementById("btn-next");
+      if (btn && document.activeElement !== btn) histNext();
+    }
+    return;
+  }
   if (state.mode === "writing") {
     if (e.key === "Enter") {
       if (!state.answered) submitWriting(); // 입력이 비어 있으면 무시됨
@@ -1461,7 +1506,690 @@ document.addEventListener("keydown", e => {
   }
 });
 
-renderStart();
+
+// ============================================================
+// ===== 한국사 (5학년 사회) — 선사 시대 ~ 고조선 (교과서 16~25쪽)
+// 문제 추가: 아래 HIST_UNITS 의 qs 배열에
+//   { q: "질문", a: "정답", d: ["오답1","오답2","오답3"], why: "해설" }
+// 형태로 붙이면 됩니다. 보기 순서는 풀 때마다 자동으로 섞입니다.
+// ============================================================
+const HIST_UNITS = [
+  {
+    id: "h1", name: "① 선사 시대의 의미", page: "16쪽",
+    qs: [
+      { q: "'선사 시대'는 어떤 시대를 말하나요?",
+        a: "인간이 문자를 발명해 기록을 남기기 이전의 시대",
+        d: ["문자를 만들어 기록을 남긴 다음의 시대", "나라가 세워진 뒤부터의 시대", "청동기를 사용하기 시작한 뒤의 시대"],
+        why: "먼저 선(先) + 역사 사(史) → '기록보다 먼저인 시대'라는 뜻이에요." },
+      { q: "선사 시대 사람들의 생활 모습은 무엇으로 짐작할 수 있나요?",
+        a: "집터, 조개더미, 무덤, 바위그림 같은 생활 흔적",
+        d: ["그때 사람들이 쓴 일기", "나라에서 펴낸 역사책", "외국에서 온 사신이 남긴 기록"],
+        why: "글자가 없던 시대라 '남긴 물건과 흔적'이 유일한 단서예요." },
+      { q: "울주 대곡리 반구대 암각화에 새겨져 있지 않은 것은?",
+        a: "한자로 쓴 기록",
+        d: ["다양한 고래의 모습", "사냥하는 모습", "배를 탄 사람들"],
+        why: "선사 시대라 글자가 없어요. 그림만 새겨져 있습니다." },
+      { q: "'암각화'란 무엇인가요?",
+        a: "바위에 새긴 그림",
+        d: ["종이에 그린 그림", "흙을 구워 만든 그릇", "나무에 새긴 글자"],
+        why: "바위 암(巖) + 새길 각(刻) + 그림 화(畵)." },
+      { q: "반구대 암각화가 있는 곳은 어디인가요?",
+        a: "울산광역시 울주군",
+        d: ["충청북도 제천시", "서울특별시 강동구", "경상북도 경주시"],
+        why: "제천은 구석기 '점말 동굴 유적'이 있는 곳이라 헷갈리기 쉬워요." }
+    ]
+  },
+  {
+    id: "h2", name: "② 구석기 시대", page: "17~18쪽",
+    qs: [
+      { q: "우리나라에 사람이 살기 시작한 것은 언제부터인가요?",
+        a: "구석기 시대부터",
+        d: ["신석기 시대부터", "청동기 시대부터", "고조선이 세워진 뒤부터"],
+        why: "가장 오래된 시대가 구석기예요." },
+      { q: "구석기 시대 사람들이 사용한 도구는?",
+        a: "뗀석기",
+        d: ["간석기", "청동 검", "철로 만든 농기구"],
+        why: "돌을 '떼어' 만들어서 뗀석기예요." },
+      { q: "뗀석기는 어떻게 만든 도구인가요?",
+        a: "돌을 깨뜨리거나 떼어 내 만든 도구",
+        d: ["돌을 갈고 다듬어 만든 도구", "구리와 주석을 섞어 만든 도구", "흙을 구워 만든 도구"],
+        why: "'갈아서' 만들면 신석기의 간석기예요." },
+      { q: "구석기 시대의 대표적인 유물은?",
+        a: "주먹도끼",
+        d: ["빗살무늬 토기", "반달 돌칼", "비파형 동검"],
+        why: "주먹에 쥐고 쓰는 뗀석기예요." },
+      { q: "구석기 시대 사람들이 살던 곳은?",
+        a: "동굴에서 살거나 강가에 막집을 짓고 살았다",
+        d: ["강가에 움집을 짓고 살았다", "나무 위에 집을 짓고 살았다", "흙으로 담을 쌓은 기와집에서 살았다"],
+        why: "움집은 신석기부터예요. 구석기는 동굴·막집!" },
+      { q: "'막집'이란 어떤 집인가요?",
+        a: "자연에서 얻은 재료로 간단하게 임시로 지은 집",
+        d: ["땅을 파고 지붕을 덮어 만든 집", "돌을 쌓아 튼튼하게 만든 집", "나무 울타리를 두른 마을의 집"],
+        why: "이동 생활을 하니까 오래 쓸 집이 필요 없었어요." },
+      { q: "구석기 시대 사람들이 한곳에 머물러 살지 않은 까닭은?",
+        a: "식량을 구하러 다른 장소로 이동해야 했기 때문",
+        d: ["날씨가 너무 추워 계속 움직여야 했기 때문", "다른 부족의 공격을 피하려고", "농사지을 땅을 찾아다녀야 했기 때문"],
+        why: "사냥·채집은 그 자리의 먹을 것이 떨어지면 옮겨야 해요." },
+      { q: "구석기 시대 사람들이 식량을 마련한 방법이 아닌 것은?",
+        a: "농사를 지어 곡식을 거두었다",
+        d: ["동물을 사냥했다", "물고기를 잡았다", "나무 열매와 식물의 뿌리를 채집했다"],
+        why: "농사는 신석기 시대에 시작돼요." },
+      { q: "구석기 시대 사람들은 불을 어떻게 이용했나요?",
+        a: "추위를 피하거나 음식을 익혀 먹는 데 이용했다",
+        d: ["청동을 녹여 도구를 만드는 데 썼다", "토기를 구워 만드는 데 썼다", "논에 물을 대는 데 썼다"],
+        why: "토기 굽기는 신석기, 청동 녹이기는 청동기예요." },
+      { q: "충청북도 제천에 있는 구석기 시대 유적은?",
+        a: "점말 동굴 유적",
+        d: ["반구대 암각화", "강화 고인돌 유적", "빗살무늬 토기 움집터"],
+        why: "구석기 사람들이 동굴에서 살았다는 증거예요." }
+    ]
+  },
+  {
+    id: "h3", name: "③ 신석기 시대", page: "19~20쪽",
+    qs: [
+      { q: "신석기 시대가 시작된 계기는 무엇인가요?",
+        a: "빙하기가 끝나고 기후가 변화했다",
+        d: ["청동기가 전해졌다", "문자가 만들어졌다", "고조선이 세워졌다"],
+        why: "날씨가 따뜻해지자 자연환경이 바뀌고 생활도 바뀌었어요." },
+      { q: "'빙하기'란 어떤 시기인가요?",
+        a: "지구의 기온이 오랫동안 내려가 빙하가 넓은 지역을 덮었던 시기",
+        d: ["화산이 자주 터지던 시기", "비가 아주 많이 내리던 시기", "바닷물이 모두 사라진 시기"],
+        why: "빙하 = 아주 큰 얼음덩어리." },
+      { q: "신석기 시대 사람들이 주로 사용한 도구는?",
+        a: "간석기",
+        d: ["뗀석기", "청동 무기", "철로 만든 도구"],
+        why: "돌을 '갈아서' 만들어 뗀석기보다 훨씬 정교했어요." },
+      { q: "간석기는 어떻게 만든 도구인가요?",
+        a: "돌을 갈고 다듬어 만든 도구",
+        d: ["돌을 깨뜨려 만든 도구", "동물 뼈를 깎아 만든 도구", "쇠를 녹여 부어 만든 도구"],
+        why: "'갈다'에서 온 이름이에요. 뗀석기보다 정교합니다." },
+      { q: "신석기 시대 사람들이 살던 집은?",
+        a: "움집",
+        d: ["막집", "동굴", "기와집"],
+        why: "땅을 파고 지은 집이라 한곳에 정착해 살 수 있었어요." },
+      { q: "신석기 시대 사람들이 마을을 이루고 산 곳은?",
+        a: "먹을 것을 구하기 쉬운 강가나 바닷가",
+        d: ["높은 산꼭대기", "깊은 동굴 속", "숲이 우거진 산속"],
+        why: "물고기를 잡고 농사도 지어야 하니까요." },
+      { q: "신석기 시대에 새롭게 시작된 것은?",
+        a: "농사",
+        d: ["청동기 사용", "문자 사용", "철기 사용"],
+        why: "농사 덕분에 한곳에 정착하는 생활이 가능해졌어요." },
+      { q: "빗살무늬 토기는 무엇에 사용했나요?",
+        a: "음식을 저장하거나 조리하는 데 사용했다",
+        d: ["곡식의 이삭을 자르는 데 사용했다", "제사를 지내는 데 사용했다", "물고기를 잡는 데 사용했다"],
+        why: "그릇이 생기면서 남은 음식을 보관할 수 있게 됐어요." },
+      { q: "갈돌과 갈판은 무엇을 하는 도구인가요?",
+        a: "도토리 같은 열매를 갈아 음식을 만드는 도구",
+        d: ["돌을 깨뜨려 도구를 만드는 도구", "실을 뽑는 도구", "땅을 파는 도구"],
+        why: "신석기 시대에는 도토리가 주식이었어요." },
+      { q: "가락바퀴는 무엇을 하는 도구인가요?",
+        a: "실을 뽑는 도구",
+        d: ["곡식을 가는 도구", "물고기를 잡는 도구", "나무를 자르는 도구"],
+        why: "뽑은 실로 옷을 만들어 입었어요." },
+      { q: "돌그물추와 뼈바늘로 알 수 있는 신석기 시대의 생활은?",
+        a: "물고기를 잡고 옷을 지어 입었다",
+        d: ["벼농사를 크게 지었다", "청동 거울로 제사를 지냈다", "철로 무기를 만들었다"],
+        why: "그물추 = 물고기잡이, 바늘 = 옷 만들기." },
+      { q: "신석기 시대 사람들의 생활 모습으로 알맞은 것은?",
+        a: "한곳에 정착해 마을을 이루고 살았다",
+        d: ["먹을 것을 찾아 늘 옮겨 다녔다", "청동 무기로 전쟁을 했다", "고인돌 무덤을 만들었다"],
+        why: "'정착'이 구석기와 갈리는 가장 큰 차이예요." }
+    ]
+  },
+  {
+    id: "h4", name: "④ 청동기 시대", page: "22~23쪽",
+    qs: [
+      { q: "우리나라와 그 주변에서 청동기를 사용하기 시작한 때는?",
+        a: "지금으로부터 약 3500년~4000년 전 무렵",
+        d: ["지금으로부터 약 100년 전", "지금으로부터 약 500년 전", "지금으로부터 약 1만 년 전"],
+        why: "교과서 숫자 그대로 외워 두면 좋아요." },
+      { q: "'청동'은 무엇으로 만든 금속인가요?",
+        a: "구리에 주석이나 납 등을 섞어 만든 금속",
+        d: ["철에 탄소를 섞어 만든 금속", "금과 은을 섞어 만든 금속", "돌을 녹여 굳힌 금속"],
+        why: "구리(銅)가 바탕이라 '청동'이에요." },
+      { q: "청동으로 주로 무엇을 만들었나요?",
+        a: "무기나 제사 도구",
+        d: ["농사짓는 도구", "밥을 짓는 그릇", "집을 짓는 기둥"],
+        why: "청동은 귀한 재료라 힘 있는 사람만 쓸 수 있었어요." },
+      { q: "청동기 시대에 농사 도구로는 무엇을 사용했나요?",
+        a: "여전히 간석기(반달 돌칼 등)를 사용했다",
+        d: ["청동으로 만든 낫을 사용했다", "철로 만든 쟁기를 사용했다", "도구 없이 손으로 지었다"],
+        why: "청동은 귀해서 일상 도구로는 못 썼어요. 자주 나오는 함정!" },
+      { q: "반달 돌칼은 무엇을 하는 도구인가요?",
+        a: "곡식의 이삭을 자르는 농사 도구",
+        d: ["사냥할 때 쓰는 무기", "제사를 지내는 도구", "실을 뽑는 도구"],
+        why: "반달 모양 간석기예요. 농사 도구라는 점이 핵심." },
+      { q: "청동기 시대에 시작되어 크게 발달한 농사는?",
+        a: "벼농사",
+        d: ["과일 농사", "목화 농사", "차 농사"],
+        why: "벼농사로 식량이 늘자 인구도 마을 규모도 커졌어요." },
+      { q: "제사장이 반짝이는 청동 거울을 목에 걸고 있던 까닭은?",
+        a: "자신이 특별하고 신성한 사람임을 드러내려고",
+        d: ["얼굴을 비춰 보려고", "햇빛을 가리려고", "시간을 알아보려고"],
+        why: "청동 = 귀한 것 = 권위의 표시." },
+      { q: "청동기 시대에 마을 둘레에 나무 울타리를 친 까닭은?",
+        a: "다른 집단의 공격으로부터 마을을 지키려고",
+        d: ["기르는 동물이 도망가지 못하게 하려고", "농사지을 땅을 나누려고", "바람을 막으려고"],
+        why: "힘센 집단이 약한 집단을 정복하던 시대라 방어가 필요했어요." },
+      { q: "청동기 시대에 나타난 큰 사회 변화는?",
+        a: "다른 사람들을 다스리는 지배자가 나타났다",
+        d: ["모든 사람이 똑같이 평등해졌다", "문자를 사용하기 시작했다", "사람들이 다시 이동 생활을 했다"],
+        why: "여기서부터 '계급'이 생겨요." },
+      { q: "고인돌은 무엇인가요?",
+        a: "권력을 가진 지배자의 무덤",
+        d: ["곡식을 저장하던 창고", "제사를 지내던 집", "마을을 지키던 망루"],
+        why: "무덤이라는 점을 꼭 기억하세요." },
+      { q: "고인돌을 만드는 순서로 알맞은 것은?",
+        a: "받침돌 세우기 → 흙을 쌓아 경사 만들기 → 덮개돌 끌어 올리기 → 흙 파내기",
+        d: ["덮개돌 올리기 → 받침돌 세우기 → 흙 쌓기 → 흙 파내기",
+            "흙 쌓기 → 덮개돌 올리기 → 받침돌 세우기 → 흙 파내기",
+            "흙 파내기 → 받침돌 세우기 → 흙 쌓기 → 덮개돌 올리기"],
+        why: "흙 경사로는 무거운 덮개돌을 굴려 올리려고 쌓는 것! 다 올린 뒤에 흙을 파냅니다." },
+      { q: "커다란 고인돌을 통해 알 수 있는 사실은?",
+        a: "많은 사람을 동원할 수 있는 힘 있는 지배자가 있었다",
+        d: ["모든 사람이 평등하게 살았다", "사람들이 이동 생활을 했다", "철기를 사용하고 있었다"],
+        why: "돌 하나 옮기는 데도 수십~수백 명이 필요해요." }
+    ]
+  },
+  {
+    id: "h5", name: "⑤ 고조선", page: "24~25쪽",
+    qs: [
+      { q: "우리 역사 속 최초의 국가는?",
+        a: "고조선",
+        d: ["고구려", "신라", "백제"],
+        why: "청동기 시대에 등장한 첫 나라예요." },
+      { q: "고조선을 세웠다고 전해지는 인물은?",
+        a: "단군왕검",
+        d: ["환인", "환웅", "주몽"],
+        why: "환인은 하늘신(할아버지), 환웅은 아버지, 단군왕검이 아들이에요." },
+      { q: "고조선이 등장한 시대는?",
+        a: "청동기 시대",
+        d: ["구석기 시대", "신석기 시대", "철기 시대"],
+        why: "지배자가 나타난 청동기 시대에 나라가 세워져요." },
+      { q: "단군왕검 이야기가 실려 있는 옛 기록은?",
+        a: "삼국유사",
+        d: ["삼국사기", "조선왕조실록", "동의보감"],
+        why: "'유사'는 남겨진 이야기라는 뜻이에요." },
+      { q: "삼국유사 기록에 따른 고조선의 건국 연도는?",
+        a: "기원전 2333년",
+        d: ["기원전 108년", "기원전 57년", "서기 2333년"],
+        why: "2333 = 세운 해, 108 = 망한 해. 짝지어 외우세요." },
+      { q: "고조선이 멸망한 해는?",
+        a: "기원전 108년",
+        d: ["기원전 2333년", "기원전 18년", "서기 108년"],
+        why: "건국 기원전 2333년 → 멸망 기원전 108년." },
+      { q: "'기원전'이란 무엇인가요?",
+        a: "연대를 세는 기준이 되는 해(기원)보다 이전의 시기",
+        d: ["나라가 세워진 해", "왕이 바뀐 해", "전쟁이 끝난 해"],
+        why: "기원전은 숫자가 클수록 더 옛날이에요." },
+      { q: "환웅이 데리고 내려온 신하 셋은 무엇을 다스렸나요?",
+        a: "비, 바람, 구름",
+        d: ["해, 달, 별", "산, 강, 바다", "불, 물, 흙"],
+        why: "셋 다 날씨! 농사와 관계있다는 뜻이에요." },
+      { q: "환웅이 비·바람·구름의 신하를 데려온 것으로 알 수 있는 것은?",
+        a: "당시 사람들이 농사를 중요하게 여겼다",
+        d: ["전쟁을 자주 했다", "물고기잡이를 잘했다", "청동을 많이 만들었다"],
+        why: "날씨는 농사의 성패를 가르니까요." },
+      { q: "곰이 사람이 되었다는 이야기는 무엇을 뜻하나요?",
+        a: "환웅이 이끄는 무리와 곰을 믿는 부족이 힘을 합쳤다",
+        d: ["실제로 곰이 사람으로 변했다", "곰을 사냥해 잡아먹었다", "호랑이를 마을에서 쫓아냈다"],
+        why: "옛이야기 속 동물은 그 동물을 섬기던 부족을 뜻해요." },
+      { q: "환웅을 하늘신 환인의 아들이라고 한 까닭은?",
+        a: "고조선을 세운 사람의 신성함을 강조하려고",
+        d: ["정말 하늘에서 내려왔기 때문에", "곰을 이기기 위해서", "농사를 잘 짓기 위해서"],
+        why: "'우리 왕은 하늘의 자손'이라며 권위를 세운 거예요." },
+      { q: "고조선 사람들이 곡식이나 음식을 보관하는 데 쓴 그릇은?",
+        a: "민무늬 토기",
+        d: ["빗살무늬 토기", "청동 거울", "반달 돌칼"],
+        why: "빗살무늬는 신석기, 민무늬는 청동기~고조선." },
+      { q: "고조선 사람들의 생활 모습으로 알맞지 않은 것은?",
+        a: "집을 지을 때 땅을 깊이 파서 지었다",
+        d: ["삼베, 동물 털, 비단으로 옷을 만들어 입었다", "짚신이나 가죽신을 신었다", "민무늬 토기에 음식을 보관했다"],
+        why: "고조선에서는 집을 지을 때 땅을 깊이 파지 않았어요." },
+      { q: "고조선의 8조법 중 오늘날까지 전해지는 조항은 몇 개인가요?",
+        a: "3개",
+        d: ["8개 모두", "5개", "1개"],
+        why: "여덟 조항 중 셋만 남아 전해져요." },
+      { q: "\"다른 사람을 죽인 사람은 사형에 처한다\"로 알 수 있는 것은?",
+        a: "살인과 같은 큰 죄는 법으로 엄격하게 다스렸다",
+        d: ["노비가 존재했다", "화폐를 사용했다", "농사를 중요하게 여겼다"],
+        why: "사형 = 아주 엄한 벌 = 엄격한 사회 질서." },
+      { q: "\"남을 다치게 한 사람은 곡식으로 갚는다\"로 알 수 있는 것은?",
+        a: "노동력을 중요하게 여겼고 개인의 재산을 인정했다",
+        d: ["신분의 차이가 없었다", "문자를 사용했다", "전쟁이 자주 일어났다"],
+        why: "다치면 일을 못 하니까 곡식으로 갚게 한 거예요. 갚을 '내 곡식'이 있다는 건 개인 재산이 있었다는 뜻!" },
+      { q: "\"도둑질한 사람은 노비로 삼는다. 죄를 면하려면 50만 전을 내야 한다\"로 알 수 있는 것은?",
+        a: "노비가 있는 신분제 사회였고 화폐의 개념이 있었다",
+        d: ["모든 사람이 평등했다", "농사를 짓지 않았다", "법이 아주 느슨했다"],
+        why: "노비 → 신분제, 50만 전 → 화폐. 두 가지를 한 번에 알 수 있어요." },
+      { q: "고조선의 8조법 전체를 통해 알 수 있는 것은?",
+        a: "고조선의 사회 질서가 엄격했다",
+        d: ["고조선에 왕이 없었다", "고조선 사람들이 글을 몰랐다", "고조선이 아주 작은 마을이었다"],
+        why: "한 문장 정리: 고조선의 법을 보면 당시 '신분제'가 엄격했음을 알 수 있다." }
+    ]
+  },
+  {
+    id: "h6", name: "⑥ 시대 비교·정리", page: "총정리",
+    qs: [
+      { q: "시대의 순서로 알맞은 것은?",
+        a: "구석기 → 신석기 → 청동기",
+        d: ["신석기 → 구석기 → 청동기", "청동기 → 신석기 → 구석기", "구석기 → 청동기 → 신석기"],
+        why: "돌을 떼서 쓰다 → 갈아 쓰다 → 금속을 쓰다." },
+      { q: "동굴이나 막집에서 살며 이동 생활을 한 시대는?",
+        a: "구석기 시대",
+        d: ["신석기 시대", "청동기 시대", "고조선 시대"],
+        why: "이동 생활 = 구석기." },
+      { q: "움집에서 살며 농사를 시작한 시대는?",
+        a: "신석기 시대",
+        d: ["구석기 시대", "청동기 시대", "철기 시대"],
+        why: "정착 + 농사 시작 = 신석기." },
+      { q: "빗살무늬 토기를 사용한 시대는?",
+        a: "신석기 시대",
+        d: ["구석기 시대", "청동기 시대", "고조선 시대"],
+        why: "빗살무늬=신석기, 민무늬=청동기. 이 짝이 시험에 자주 나와요." },
+      { q: "고인돌을 만든 시대는?",
+        a: "청동기 시대",
+        d: ["구석기 시대", "신석기 시대", "철기 시대"],
+        why: "지배자가 생긴 시대라 큰 무덤을 만들 수 있었어요." },
+      { q: "뗀석기와 간석기의 차이로 알맞은 것은?",
+        a: "뗀석기는 돌을 깨뜨려 만들고, 간석기는 돌을 갈아 만든다",
+        d: ["뗀석기는 청동으로, 간석기는 돌로 만든다", "뗀석기는 농사용, 간석기는 사냥용이다", "뗀석기가 간석기보다 더 정교하다"],
+        why: "떼다(깨다) ↔ 갈다. 간석기가 더 정교해요." },
+      { q: "사냥과 채집만으로 먹을 것을 구한 시대는?",
+        a: "구석기 시대",
+        d: ["신석기 시대", "청동기 시대", "고조선 시대"],
+        why: "신석기부터는 농사도 지었어요." },
+      { q: "계급이 생기고 지배자가 등장한 시대는?",
+        a: "청동기 시대",
+        d: ["구석기 시대", "신석기 시대", "빙하기"],
+        why: "청동기 → 지배자 → 고조선(나라)으로 이어져요." },
+      { q: "주먹도끼 · 빗살무늬 토기 · 비파형 동검을 시대 순으로 늘어놓으면?",
+        a: "주먹도끼 → 빗살무늬 토기 → 비파형 동검",
+        d: ["빗살무늬 토기 → 주먹도끼 → 비파형 동검", "비파형 동검 → 주먹도끼 → 빗살무늬 토기", "주먹도끼 → 비파형 동검 → 빗살무늬 토기"],
+        why: "구석기 → 신석기 → 청동기 대표 유물 하나씩!" },
+      { q: "다음 중 청동기 시대의 유물이 아닌 것은?",
+        a: "가락바퀴",
+        d: ["비파형 동검", "반달 돌칼", "청동 거울"],
+        why: "가락바퀴는 신석기 시대에 실을 뽑던 도구예요." }
+    ]
+  }
+];
+
+const HIST_ALL = HIST_UNITS.flatMap(u =>
+  u.qs.map((q, i) => ({ ...q, id: u.id + "-" + i, unitName: u.name }))
+);
+
+// ===== 한국사 기록·오답 통계 (영어와 따로 저장) =====
+const HIST_HISTORY_KEY = "yuha-hist-history";
+const HIST_WRONG_KEY = "yuha-hist-wrong";
+
+function histLoadHistory() {
+  try { return JSON.parse(localStorage.getItem(HIST_HISTORY_KEY) || "[]"); }
+  catch (e) { return []; }
+}
+function histSaveHistoryEntry(entry) {
+  const h = histLoadHistory();
+  h.unshift(entry);
+  try { localStorage.setItem(HIST_HISTORY_KEY, JSON.stringify(h.slice(0, 50))); } catch (e) {}
+}
+function histLoadWrong() {
+  try { return JSON.parse(localStorage.getItem(HIST_WRONG_KEY) || "{}"); }
+  catch (e) { return {}; }
+}
+function histBumpWrong(id, delta) {
+  const stats = histLoadWrong();
+  const next = (stats[id] || 0) + delta;
+  if (next <= 0) delete stats[id];
+  else stats[id] = next;
+  try { localStorage.setItem(HIST_WRONG_KEY, JSON.stringify(stats)); } catch (e) {}
+}
+// 자주 틀리는 문제 (많이 틀린 순, 최대 20개)
+function histReviewQs() {
+  const stats = histLoadWrong();
+  return HIST_ALL.filter(q => stats[q.id] > 0)
+    .sort((a, b) => stats[b.id] - stats[a.id])
+    .slice(0, 20);
+}
+// 최근 시험 3번에서 틀린 문제
+function histRecentWrongQs() {
+  const ids = [];
+  histLoadHistory().slice(0, 3).forEach(e =>
+    (e.wrongIds || []).forEach(id => { if (!ids.includes(id)) ids.push(id); })
+  );
+  return ids.map(id => HIST_ALL.find(q => q.id === id)).filter(Boolean);
+}
+function histHistoryHTML() {
+  const h = histLoadHistory();
+  return `
+    <div class="history-section">
+      <div class="history-title">
+        <span>📜 시험 기록</span>
+        ${h.length ? `<button class="btn-clear-history" id="btn-hist-clear-history">기록 지우기</button>` : ""}
+      </div>
+      ${h.length ? `<div class="history-list">
+        ${h.map(e => `
+          <div class="history-item">
+            <span class="h-mode">🏺 한국사</span>
+            <span class="h-score">${e.accuracy}% · ⭕${e.correct} ❌${e.attempts - e.correct}</span>
+            <span class="h-range">${e.range}</span>
+            ${e.duration != null ? `<span class="h-range">⏱ ${fmtDuration(e.duration)}</span>` : ""}
+            <span class="h-date">${fmtDate(e.date)}</span>
+          </div>`).join("")}
+      </div>`
+      : `<div class="history-empty">아직 시험 기록이 없어요. 첫 시험을 쳐 보세요!</div>`}
+    </div>`;
+}
+
+// ===== 과목 선택 화면 =====
+function renderSubject() {
+  state = {};
+  speechSynthesis && speechSynthesis.cancel();
+  app.innerHTML = `
+    <h1>📚 유하의 공부방</h1>
+    <p class="subtitle">오늘은 어떤 시험을 볼까요? <span style="color:#ccc;font-size:.72rem">${APP_VERSION}</span></p>
+    <div class="subject-list">
+      <button class="subject-card" id="sub-eng">
+        <span class="s-emoji">🔤</span>
+        <span class="s-text">
+          <span class="s-name">영어 단어 시험</span>
+          <span class="s-desc">${ALL_WORDS.length}단어 · 뜻 고르기 / 스펠링 / 직접 쓰기</span>
+        </span>
+      </button>
+      <button class="subject-card hist" id="sub-hist">
+        <span class="s-emoji">🏺</span>
+        <span class="s-text">
+          <span class="s-name">한국사 시험</span>
+          <span class="s-desc">${HIST_ALL.length}문제 · 선사 시대 ~ 고조선 (사회 16~25쪽)</span>
+        </span>
+      </button>
+    </div>`;
+  document.getElementById("sub-eng").addEventListener("click", renderStart);
+  document.getElementById("sub-hist").addEventListener("click", renderHistStart);
+}
+
+// ===== 한국사 시작 화면 =====
+function renderHistStart() {
+  state = {};
+  speechSynthesis && speechSynthesis.cancel();
+  const rw = histReviewQs();
+  const recent = histRecentWrongQs();
+  app.innerHTML = `
+    <button class="btn-back-sub" id="btn-to-subject">← 과목 선택</button>
+    <h1>🏺 유하의 한국사 시험</h1>
+    <p class="subtitle">공부할 단원을 고르고 시험을 시작하세요 <span style="color:#ccc;font-size:.72rem">${APP_VERSION}</span></p>
+    <div class="range-head">
+      <span class="section-label">시험 범위</span>
+      <button class="btn-toggle-all" id="btn-hist-toggle">전체 선택/해제</button>
+    </div>
+    <div class="lesson-list">
+      ${HIST_UNITS.map(u => `
+        <label class="lesson-item">
+          <input type="checkbox" value="${u.id}" checked>
+          <span class="name">${u.name}<span class="unit-page">${u.page}</span></span>
+          <span class="count">${u.qs.length}문제</span>
+        </label>`).join("")}
+    </div>
+    <label class="option-row">
+      <input type="checkbox" id="hist-opt-why" checked>
+      <span>💡 정답을 확인할 때 해설도 같이 보여주기</span>
+    </label>
+    <button class="btn-primary" id="btn-hist-start">시험 시작!</button>
+    <div class="range-head" style="margin-top:24px">
+      <span class="section-label">복습</span>
+      ${rw.length ? `<button class="btn-clear-history" id="btn-hist-clear-stats">오답 통계 지우기</button>` : ""}
+    </div>
+    ${(rw.length || recent.length)
+      ? `${recent.length ? `<button class="btn-review btn-recent" id="btn-hist-recent">🕐 최근 시험 3번 오답 풀기 (${recent.length}문제)</button>` : ""}
+         ${rw.length ? `<button class="btn-review" id="btn-hist-review" ${recent.length ? 'style="margin-top:8px"' : ""}>🔁 자주 틀리는 문제만 풀기 (누적 ${rw.length}문제)</button>` : ""}
+         ${rw.length ? `<button class="btn-alt" id="btn-hist-ranking" style="margin-top:6px">📊 많이 틀리는 문제 보기</button>` : ""}`
+      : `<div class="history-empty">아직 오답 데이터가 없어요. 시험에서 틀린 문제가 여기에 자동으로 모여요.</div>`}
+    ${histHistoryHTML()}
+  `;
+  document.getElementById("btn-to-subject").addEventListener("click", renderSubject);
+  const boxes = [...app.querySelectorAll(".lesson-item input")];
+  const startBtn = document.getElementById("btn-hist-start");
+  const update = () => { startBtn.disabled = !boxes.some(b => b.checked); };
+  boxes.forEach(b => b.addEventListener("change", update));
+  document.getElementById("btn-hist-toggle").addEventListener("click", () => {
+    const turnOn = boxes.some(b => !b.checked);
+    boxes.forEach(b => { b.checked = turnOn; });
+    update();
+  });
+  startBtn.addEventListener("click", () => {
+    const sel = boxes.filter(b => b.checked).map(b => b.value);
+    const qs = HIST_ALL.filter(q => sel.includes(q.id.split("-")[0]));
+    const range = sel.length === HIST_UNITS.length
+      ? "전체" : HIST_UNITS.filter(u => sel.includes(u.id)).map(u => u.name.slice(0, 1)).join("");
+    startHistQuiz(qs, range, false);
+  });
+  const b1 = document.getElementById("btn-hist-recent");
+  if (b1) b1.addEventListener("click", () => startHistQuiz(histRecentWrongQs(), "최근오답", true));
+  const b2 = document.getElementById("btn-hist-review");
+  if (b2) b2.addEventListener("click", () => startHistQuiz(histReviewQs(), "복습", true));
+  const b3 = document.getElementById("btn-hist-ranking");
+  if (b3) b3.addEventListener("click", renderHistRanking);
+  const b4 = document.getElementById("btn-hist-clear-history");
+  if (b4) b4.addEventListener("click", () => {
+    if (confirm("한국사 시험 기록을 모두 지울까요?")) {
+      localStorage.removeItem(HIST_HISTORY_KEY);
+      renderHistStart();
+    }
+  });
+  const b5 = document.getElementById("btn-hist-clear-stats");
+  if (b5) b5.addEventListener("click", () => {
+    if (confirm("한국사 오답 통계를 모두 지울까요? 복습 목록이 비워집니다.")) {
+      localStorage.removeItem(HIST_WRONG_KEY);
+      renderHistStart();
+    }
+  });
+}
+
+// ===== 많이 틀리는 문제 보기 =====
+function renderHistRanking() {
+  state = {};
+  const stats = histLoadWrong();
+  const ranked = HIST_ALL.filter(q => stats[q.id] > 0)
+    .sort((a, b) => stats[b.id] - stats[a.id])
+    .slice(0, 30);
+  const max = ranked.length ? stats[ranked[0].id] : 1;
+  const medals = ["🥇", "🥈", "🥉"];
+  app.innerHTML = `
+    <h1>📊 많이 틀리는 한국사 문제</h1>
+    <p class="subtitle">시험에서 틀린 횟수 순이에요 (복습에서 맞히면 줄어들어요)</p>
+    ${ranked.length ? `<div class="rank-list">
+      ${ranked.map((q, i) => `
+        <div class="rank-item ${i < 3 ? "top3" : ""}">
+          <span class="rank-no">${i < 3 ? medals[i] : (i + 1)}</span>
+          <div class="rank-word">
+            <div class="en" style="font-size:1rem;line-height:1.4">${escapeHtml(q.q)}</div>
+            <div class="ko">정답: ${escapeHtml(q.a)}</div>
+            ${q.why ? `<div class="rank-tip">💡 ${escapeHtml(q.why)}</div>` : ""}
+            <div class="rank-bar"><div style="width:${Math.max(8, Math.round(stats[q.id] / max * 100))}%"></div></div>
+          </div>
+          <span class="rank-cnt">${stats[q.id]}회</span>
+        </div>`).join("")}
+    </div>`
+    : `<div class="history-empty">아직 틀린 문제가 없어요! 👏</div>`}
+    <button class="btn-primary" id="btn-hist-back">🏠 처음으로</button>
+  `;
+  document.getElementById("btn-hist-back").addEventListener("click", renderHistStart);
+}
+
+// ===== 한국사 퀴즈 진행 =====
+function startHistQuiz(qs, range, isReview) {
+  state = {
+    subject: "hist",
+    showWhy: (document.getElementById("hist-opt-why") || { checked: true }).checked,
+    range: range || "전체",
+    isReview: !!isReview,
+    totalQs: qs.length,
+    startTime: Date.now(),
+    round: 1,
+    queue: shuffle(qs),
+    idx: 0,
+    wrongThisRound: [],
+    totalAttempts: 0,
+    totalCorrect: 0,
+    wrongCount: {},
+    answered: false
+  };
+  renderHistQuestion();
+}
+
+function renderHistQuestion() {
+  const q = state.queue[state.idx];
+  state.answered = false;
+  state.currentChoices = shuffle([q.a, ...q.d]);
+  const progress = (state.idx / state.queue.length) * 100;
+  const isRetry = state.round > 1;
+
+  app.innerHTML = `
+    <div class="top-bar">
+      <span class="round-badge ${isRetry ? "retry" : ""}">
+        ${isRetry ? `🔁 오답 다시 풀기 (${state.round}차)` : "1차 시험"}
+      </span>
+      <button class="btn-restart" id="btn-hist-restart">🏠 처음으로</button>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
+    <div class="progress-text">${state.idx + 1} / ${state.queue.length}</div>
+    <div class="score-line">
+      <span class="sc-ok">⭕ 맞음 ${state.totalCorrect}</span>
+      <span class="sc-no">❌ 틀림 ${state.totalAttempts - state.totalCorrect}</span>
+    </div>
+    <div class="q-box">
+      <div class="q-unit">${escapeHtml(q.unitName)}</div>
+      <div class="q-text">${escapeHtml(q.q)}</div>
+      <div class="word-hint">알맞은 답을 고르세요 (키보드 1~4)</div>
+    </div>
+    <div class="choices">
+      ${state.currentChoices.map((c, i) => `
+        <button class="choice" data-i="${i}">
+          <span class="num">${i + 1}</span><span>${escapeHtml(c)}</span>
+        </button>`).join("")}
+    </div>
+    <div class="feedback" id="feedback"></div>
+  `;
+  document.getElementById("btn-hist-restart").addEventListener("click", histConfirmRestart);
+  app.querySelectorAll(".choice").forEach(btn =>
+    btn.addEventListener("click", () => histAnswer(parseInt(btn.dataset.i)))
+  );
+}
+
+function histAnswer(i) {
+  if (state.answered) return;
+  state.answered = true;
+
+  const q = state.queue[state.idx];
+  const correct = state.currentChoices[i] === q.a;
+
+  state.totalAttempts++;
+  if (correct) {
+    state.totalCorrect++;
+    if (state.round === 1 && state.isReview) histBumpWrong(q.id, -1);
+  } else {
+    state.wrongThisRound.push(q);
+    state.wrongCount[q.id] = (state.wrongCount[q.id] || 0) + 1;
+    if (state.round === 1) histBumpWrong(q.id, +1);
+  }
+
+  [...app.querySelectorAll(".choice")].forEach((b, j) => {
+    b.disabled = true;
+    if (state.currentChoices[j] === q.a) b.classList.add("correct");
+    else if (j === i) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+
+  const fb = document.getElementById("feedback");
+  fb.className = "feedback " + (correct ? "ok" : "no");
+  fb.textContent = correct ? "⭕ 정답입니다!" : "❌ 틀렸어요!";
+
+  if (state.showWhy && q.why) {
+    const why = document.createElement("div");
+    why.className = "hist-why";
+    why.innerHTML = `💡 ${escapeHtml(q.why)}`;
+    fb.after(why);
+  }
+
+  const next = document.createElement("button");
+  next.className = "btn-next";
+  next.id = "btn-next";
+  const isLast = state.idx === state.queue.length - 1;
+  next.textContent = isLast && state.wrongThisRound.length === 0 ? "결과 보기 →" : "다음 문제 → (Enter)";
+  next.addEventListener("click", histNext);
+  (app.querySelector(".hist-why") || fb).after(next);
+  next.focus();
+}
+
+function histNext() {
+  state.idx++;
+  if (state.idx < state.queue.length) {
+    renderHistQuestion();
+  } else if (state.wrongThisRound.length > 0) {
+    state.round++;
+    state.queue = shuffle(state.wrongThisRound);
+    state.wrongThisRound = [];
+    state.idx = 0;
+    renderHistQuestion();
+  } else {
+    renderHistResult();
+  }
+}
+
+function renderHistResult() {
+  const wrongEntries = Object.entries(state.wrongCount).sort((a, b) => b[1] - a[1]);
+  const accuracy = state.totalAttempts
+    ? Math.round((state.totalCorrect / state.totalAttempts) * 100) : 0;
+  const perfect = wrongEntries.length === 0;
+  const dur = Math.round((Date.now() - state.startTime) / 1000);
+
+  histSaveHistoryEntry({
+    date: Date.now(),
+    range: state.range,
+    qs: state.totalQs,
+    attempts: state.totalAttempts,
+    correct: state.totalCorrect,
+    accuracy,
+    rounds: state.round,
+    duration: dur,
+    wrongIds: Object.keys(state.wrongCount)
+  });
+
+  app.innerHTML = `
+    <div class="result-emoji">${perfect ? "🏆" : accuracy >= 80 ? "🎉" : "💪"}</div>
+    <div class="result-title">${perfect ? "완벽해요! 한 번에 다 맞혔어요!" : "모든 문제를 다 맞혔어요!"}</div>
+    <div class="stats">
+      <div class="stat"><div class="val" style="color:#27ae60">${state.totalCorrect}</div><div class="label">⭕ 맞음</div></div>
+      <div class="stat"><div class="val" style="color:#e74c3c">${state.totalAttempts - state.totalCorrect}</div><div class="label">❌ 틀림</div></div>
+      <div class="stat"><div class="val">${accuracy}%</div><div class="label">정답률</div></div>
+      <div class="stat"><div class="val">${state.round}</div><div class="label">라운드</div></div>
+    </div>
+    <div style="text-align:center; color:#999; font-size:.88rem; margin:-8px 0 20px">⏱ 걸린 시간: ${fmtDuration(dur)}</div>
+    ${perfect
+      ? `<p class="perfect-msg">틀린 문제가 하나도 없어요 👏</p>`
+      : `<div class="wrong-list-title">📌 틀렸던 문제 (복습하세요!)</div>
+         <div class="hist-wrong-list">
+           ${wrongEntries.map(([id, cnt]) => {
+             const q = HIST_ALL.find(x => x.id === id);
+             return `<div class="hist-wrong-item">
+               <div class="hw-q">${escapeHtml(q.q)} <span class="cnt">${cnt}회 틀림</span></div>
+               <div class="hw-a">✅ ${escapeHtml(q.a)}</div>
+               ${q.why ? `<div class="hw-why">💡 ${escapeHtml(q.why)}</div>` : ""}
+             </div>`;
+           }).join("")}
+         </div>`}
+    <button class="btn-primary" id="btn-hist-again">🏠 처음으로</button>
+  `;
+  document.getElementById("btn-hist-again").addEventListener("click", renderHistStart);
+}
+
+function histConfirmRestart() {
+  if (confirm("시험을 그만두고 처음 화면으로 갈까요? 지금까지의 진행은 사라집니다.")) {
+    renderHistStart();
+  }
+}
+
+renderSubject();
 
 // PWA: 홈 화면 설치 + 오프라인 지원 (업데이트는 네트워크 우선이라 자동 반영)
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
