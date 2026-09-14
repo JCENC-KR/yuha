@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>은율이의 중간고사</title>
+<style>
+  :root { --bad: #e74c3c; --accent: #667eea; --accent-soft: #eeeaff; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 16px;
+    color: #333;
+    word-break: keep-all;
+  }
+  .card {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    width: 100%;
+    max-width: 560px;
+    margin: auto 0;
+    padding: 32px 28px;
+  }
+  h1 { font-size: 1.5rem; color: #4a3b8c; text-align: center; margin-bottom: 8px; }
+  .subtitle { text-align: center; color: #888; font-size: .9rem; margin-bottom: 24px; }
+
+  /* 시작 화면 */
+  .lesson-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; max-height: 300px; overflow-y: auto; padding-right: 4px; }
+  .unit-head {
+    display: flex; align-items: center; gap: 8px; padding: 6px 2px 2px;
+    font-weight: 800; color: #4a3b8c; font-size: .92rem; cursor: pointer; user-select: none;
+  }
+  .unit-head input { width: 16px; height: 16px; accent-color: #667eea; cursor: pointer; }
+  .unit-head .unit-count { margin-left: auto; color: #b3a5e8; font-size: .8rem; font-weight: 600; }
+  .range-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .range-head .section-label { margin-bottom: 0; }
+  .btn-toggle-all { background: none; color: #8b7cc8; font-size: .78rem; padding: 4px 8px; font-weight: 600; }
+  .btn-toggle-all:hover { color: #4a3b8c; }
+  .btn-review {
+    width: 100%; padding: 13px; color: #fff;
+    background: linear-gradient(135deg, #f2994a, #f2c94c);
+  }
+  .btn-review:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(242,153,74,.4); }
+  .review-hint { font-size: .78rem; color: #b08968; margin-top: 8px; text-align: center; }
+  .lesson-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border: 2px solid #e5e0f5; border-radius: 12px;
+    cursor: pointer; transition: all .15s; user-select: none;
+  }
+  .lesson-item:hover { border-color: #b3a5e8; background: #f8f6ff; }
+  .lesson-item input { width: 18px; height: 18px; accent-color: #667eea; cursor: pointer; flex-shrink: 0; }
+  .lesson-item .name { font-weight: 600; color: #333; }
+  .lesson-item .count { margin-left: auto; color: #999; font-size: .85rem; white-space: nowrap; }
+  .option-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+    padding: 10px 16px; background: #f5f3fc; border-radius: 10px;
+    cursor: pointer; user-select: none;
+  }
+  .option-row input { accent-color: #667eea; width: 16px; height: 16px; cursor: pointer; }
+  .option-row span { font-size: .9rem; color: #555; }
+  .mode-list { display: flex; gap: 10px; margin-bottom: 16px; }
+  .mode-item {
+    flex: 1; display: flex; flex-direction: column; gap: 4px;
+    padding: 12px 14px; border: 2px solid #e5e0f5; border-radius: 12px;
+    cursor: pointer; transition: all .15s; user-select: none; text-align: center;
+  }
+  .mode-item:hover { border-color: #b3a5e8; background: #f8f6ff; }
+  .mode-item.selected { border-color: #667eea; background: #f3f0ff; }
+  .mode-item input { display: none; }
+  .mode-item .mode-name { font-weight: 700; color: #4a3b8c; }
+  .mode-item .mode-desc { font-size: .78rem; color: #999; }
+  .section-label { font-size: .85rem; font-weight: 700; color: #777; margin-bottom: 8px; }
+  .count-list { display: flex; gap: 8px; margin-bottom: 6px; }
+  .count-item {
+    flex: 1; padding: 10px 6px; border: 2px solid #e5e0f5; border-radius: 12px;
+    cursor: pointer; transition: all .15s; user-select: none; text-align: center;
+  }
+  .count-item:hover { border-color: #b3a5e8; background: #f8f6ff; }
+  .count-item.selected { border-color: #667eea; background: #f3f0ff; }
+  .count-item input { position: absolute; opacity: 0; pointer-events: none; }
+  .count-item:has(input:focus-visible) { outline: 3px solid #a78bfa; outline-offset: 2px; }
+  .count-name { font-weight: 700; color: #4a3b8c; font-size: .95rem; }
+  .count-hint { font-size: .78rem; color: #b08968; min-height: 18px; margin-bottom: 10px; text-align: center; }
+
+  /* 실시간 점수 */
+  .score-line { display: flex; gap: 16px; justify-content: center; margin-bottom: 14px; font-weight: 700; font-size: .95rem; }
+  .score-line .sc-ok { color: #27ae60; }
+  .score-line .sc-no { color: #e74c3c; }
+
+  /* 해설 */
+  .answer-reveal { margin-top: 18px; background: #f7f5ff; border-radius: 14px; padding: 18px 20px; }
+  .answer-label { font-size: .8rem; color: #8b7cc8; font-weight: 700; margin-bottom: 6px; }
+  .explain-text { font-size: .93rem; color: #444; line-height: 1.7; white-space: pre-wrap; }
+
+  /* 시험 기록 */
+  .history-section { margin-top: 24px; }
+  .history-title { font-size: .9rem; font-weight: 700; color: #666; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .btn-clear-history { background: none; color: #bbb; font-size: .75rem; padding: 4px 8px; }
+  .btn-clear-history:hover { color: #e74c3c; }
+  .btn-clear-history.armed { color: #e74c3c; }
+  .history-list { display: flex; flex-direction: column; gap: 6px; max-height: 190px; overflow-y: auto; }
+  .history-item { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: #f7f5ff; border-radius: 10px; font-size: .82rem; flex-wrap: wrap; }
+  .history-item .h-mode { font-weight: 700; color: #4a3b8c; white-space: nowrap; }
+  .history-item .h-score { font-weight: 700; color: #333; white-space: nowrap; }
+  .history-item .h-range { color: #999; }
+  .history-item .h-date { color: #bbb; margin-left: auto; white-space: nowrap; }
+  .history-empty { text-align: center; color: #bbb; font-size: .85rem; padding: 12px; }
+
+  button {
+    font-family: inherit; cursor: pointer; border: none; border-radius: 12px;
+    font-size: 1rem; font-weight: 600; transition: all .15s;
+  }
+  button:focus-visible { outline: 3px solid #a78bfa; outline-offset: 2px; }
+  .btn-primary {
+    width: 100%; padding: 15px;
+    background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,.4); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* 퀴즈 화면 */
+  .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .round-badge {
+    background: #eef; color: #556; font-size: .8rem; font-weight: 700;
+    padding: 4px 12px; border-radius: 999px;
+  }
+  .round-badge.retry { background: #fde8e8; color: #c0392b; }
+  .btn-restart {
+    background: #f0f0f0; color: #666; padding: 6px 14px; font-size: .82rem;
+  }
+  .btn-restart:hover { background: #e0e0e0; }
+  .btn-restart.armed { background: #fde8e8; color: #c0392b; }
+  .progress-track { background: #eee; border-radius: 999px; height: 10px; overflow: hidden; margin-bottom: 6px; }
+  .progress-fill {
+    height: 100%; border-radius: 999px; width: 0;
+    background: linear-gradient(90deg, #667eea, #a78bfa); transition: width .3s;
+  }
+  .progress-text { font-size: .8rem; color: #999; text-align: right; margin-bottom: 18px; }
+
+  .q-box { margin-bottom: 20px; }
+  .q-meta { display: flex; align-items: center; gap: 8px; font-size: .82rem; font-weight: 700; color: #8b7cc8; margin-bottom: 10px; }
+  .subj-chip { color: #fff; padding: 2px 10px; border-radius: 999px; font-size: .78rem; }
+  .passage {
+    background: #f7f5ff; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px;
+    font-size: .93rem; line-height: 1.7; color: #333; white-space: pre-wrap; overflow-x: auto;
+  }
+  .fig { text-align: center; color: #2d2456; white-space: normal; }
+  .question { font-size: 1.12rem; font-weight: 800; color: #2d2456; line-height: 1.55; white-space: pre-wrap; }
+  .word-hint { font-size: .85rem; color: #aaa; margin-top: 8px; }
+
+  .choices { display: flex; flex-direction: column; gap: 10px; }
+  .choice {
+    padding: 13px 16px; border: 2px solid #e5e0f5; border-radius: 12px;
+    background: #fff; font-size: 1rem; text-align: left; color: #333;
+    display: flex; align-items: flex-start; gap: 12px; line-height: 1.45;
+  }
+  .choice .txt { white-space: pre-wrap; }
+  .choice .num {
+    background: #f0edfb; color: #7c6bd0; font-size: .8rem; font-weight: 700;
+    width: 24px; height: 24px; border-radius: 6px; margin-top: 1px;
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .choice:hover:not(:disabled) { border-color: #a78bfa; background: #faf8ff; }
+  .choice:disabled { cursor: default; }
+  .choice.correct { border-color: #27ae60; background: #eafaf1; color: #1e8449; font-weight: 700; }
+  .choice.correct .num { background: #27ae60; color: #fff; }
+  .choice.wrong { border-color: #e74c3c; background: #fdedec; color: #c0392b; }
+  .choice.wrong .num { background: #e74c3c; color: #fff; }
+  .choice.dim { opacity: .45; }
+
+  .feedback { text-align: center; margin-top: 18px; min-height: 30px; font-weight: 700; font-size: 1.05rem; }
+  .feedback.ok { color: #27ae60; }
+  .feedback.no { color: #e74c3c; }
+
+  .btn-next { width: 100%; padding: 14px; margin-top: 14px; background: #4a3b8c; color: #fff; }
+  .btn-next:hover { background: #5c4bad; }
+
+  /* 결과 화면 */
+  .result-emoji { font-size: 4rem; text-align: center; margin-bottom: 12px; }
+  .result-title { text-align: center; font-size: 1.4rem; font-weight: 800; color: #2d2456; margin-bottom: 20px; }
+  .stats { display: flex; gap: 10px; margin-bottom: 22px; }
+  .stat {
+    flex: 1; background: #f7f5ff; border-radius: 14px; padding: 16px 8px; text-align: center;
+  }
+  .stat .val { font-size: 1.6rem; font-weight: 800; color: #4a3b8c; }
+  .stat .label { font-size: .78rem; color: #999; margin-top: 4px; }
+  .wrong-list-title { font-size: .9rem; font-weight: 700; color: #666; margin-bottom: 10px; }
+  .wrong-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 22px; max-height: 260px; overflow-y: auto; }
+  .wrong-item {
+    display: flex; flex-direction: column; gap: 3px; padding: 10px 14px;
+    background: #fdf5f5; border-radius: 10px; font-size: .92rem;
+  }
+  .wrong-item .top { display: flex; justify-content: space-between; gap: 8px; }
+  .wrong-item .en { font-weight: 700; color: #b03a2e; }
+  .wrong-item .ko { color: #666; font-size: .85rem; }
+  .wrong-item .cnt { color: #d98880; font-size: .8rem; white-space: nowrap; }
+  .perfect-msg { text-align: center; color: #27ae60; font-weight: 600; margin-bottom: 22px; }
+
+  @media (max-width: 480px) {
+    .card { padding: 24px 18px; }
+    .stats { flex-wrap: wrap; }
+    .stat { flex: 1 1 40%; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="card" id="app"></div>
+
+<script>
+// ===== 문제 데이터 (2024·2025 1학년 2학기 중간고사 기출 범위) =====
+const QUESTIONS = {};
+        QUESTIONS.국어 = [
+            { topic: '요약하기', q: '요약하기 방법 중 "중요하지 않거나 반복되는 내용을 지운다"에 해당하는 것은?',
+              options: ['삭제', '선택', '일반화', '재구성', '예측'], answer: 0,
+              explain: '삭제: 덜 중요하거나 반복되는 내용 지우기\n선택: 중요한 문장(중심 문장) 고르기\n일반화: 여러 내용을 포괄하는 말로 묶기\n재구성: 중심 문장이 없을 때 중심 내용을 직접 만들기' },
+            { topic: '요약하기', passage: '상욱이는 펜싱을 잘한다. 축구와 야구도 잘한다. 수영과 농구도 잘한다.',
+              q: '위 내용을 "상욱이는 운동을 잘한다."로 요약했을 때 사용한 방법은?',
+              options: ['일반화', '삭제', '선택', '재구성', '인용'], answer: 0,
+              explain: '펜싱, 축구, 야구, 수영, 농구를 모두 포함하는 말인 "운동"으로 바꿨으므로 일반화예요.' },
+            { topic: '요약하기', q: '요약하기에 대한 설명으로 가장 적절한 것은?',
+              options: ['중심 문장이 없으면 중심 내용을 직접 만들어 쓴다.', '중심 문장이 없으면 요약하지 않는다.', '중심 문장은 절대 고치지 않고 그대로 이어 붙인다.', '세부 내용은 빠짐없이 모두 살려 쓴다.', '글의 종류와 상관없이 늘 같은 방법으로 요약한다.'], answer: 0,
+              explain: '중심 문장이 드러나지 않으면 "재구성"으로 중심 내용을 만들어요. 요약은 세부 내용을 줄이고, 글의 종류(설명문/이야기 등)에 따라 방법을 달리해요.' },
+            { topic: '요약하기', q: '옛이야기(설화)를 요약하는 방법으로 가장 알맞은 것은?',
+              options: ['사건이 일어난 순서(시간의 흐름)에 따라 요약한다.', '글쓴이의 주장과 근거를 중심으로 요약한다.', '서론-본론-결론의 짜임에 맞춰 요약한다.', '글에 나온 통계 자료를 중심으로 요약한다.', '문단마다 중심 문장을 하나씩 뽑아 그대로 연결한다.'], answer: 0,
+              explain: '이야기 글은 인물이 겪은 사건을 시간 순서대로 정리해요. 주장과 근거 중심 요약은 설득하는 글에 맞는 방법이에요.' },
+            { topic: '요약하며 읽기', q: '요약하며 읽기의 효과로 알맞지 않은 것은?',
+              options: ['글의 세부 내용을 한 글자도 빠짐없이 외울 수 있다.', '글의 중심 내용을 파악할 수 있다.', '글의 내용을 오래 기억할 수 있다.', '글의 내용을 순서대로 잘 이해할 수 있다.', '읽기 목적에 맞게 필요한 정보를 정리할 수 있다.'], answer: 0,
+              explain: '요약은 중요한 내용만 간추리는 것이라 세부 내용을 전부 외우는 것과는 거리가 멀어요.' },
+            { topic: '읽기 목적', passage: '(가) 비가 그친 뒤 하늘에 뜬 무지개를 본 적이 있는가? 오늘은 무지개에 대해 알아보자.\n(나) 무지개는 햇빛이 공기 중의 작은 물방울을 지나면서 꺾이고 반사되어 여러 색의 빛으로 나뉘어 보이는 현상이다.\n(다) 무지개는 주로 해를 등지고 섰을 때 볼 수 있으며, 해가 낮게 뜬 아침이나 늦은 오후에 잘 보인다.\n(라) 옛날 사람들은 무지개를 하늘로 올라가는 다리라고 생각하기도 했다.',
+              q: '"무지개가 생기는 원리"를 알고 싶은 사람에게 가장 필요한 문단은?',
+              options: ['(나)', '(가)', '(다)', '(라)', '(가)와 (라)'], answer: 0,
+              explain: '읽기 목적에 맞는 문단을 골라 요약해요. 원리(어떻게 생기는지)는 (나)에 있어요.' },
+            { topic: '요약하기', passage: '(가) 비가 그친 뒤 하늘에 뜬 무지개를 본 적이 있는가? 오늘은 무지개에 대해 알아보자.\n(나) 무지개는 햇빛이 공기 중의 작은 물방울을 지나면서 꺾이고 반사되어 여러 색의 빛으로 나뉘어 보이는 현상이다.\n(다) 무지개는 주로 해를 등지고 섰을 때 볼 수 있으며, 해가 낮게 뜬 아침이나 늦은 오후에 잘 보인다.\n(라) 옛날 사람들은 무지개를 하늘로 올라가는 다리라고 생각하기도 했다.',
+              q: '(가)~(라)의 내용을 요약한 것으로 적절하지 않은 것은?',
+              options: ['(라): 무지개를 볼 수 있는 시간', '(가): 글의 화제 소개', '(나): 무지개가 생기는 원리', '(다): 무지개를 볼 수 있는 조건'], answer: 0,
+              explain: '(라)는 "옛날 사람들이 무지개를 어떻게 생각했는지"에 대한 내용이에요. 볼 수 있는 시간은 (다)에 있어요.' },
+            { topic: '글쓰기 과정', q: '글쓰기 과정을 순서대로 바르게 늘어놓은 것은?',
+              options: ['계획하기 → 내용 생성하기 → 내용 조직하기 → 글쓰기 → 고쳐쓰기', '내용 생성하기 → 계획하기 → 내용 조직하기 → 글쓰기 → 고쳐쓰기', '계획하기 → 내용 조직하기 → 내용 생성하기 → 글쓰기 → 고쳐쓰기', '계획하기 → 내용 생성하기 → 글쓰기 → 내용 조직하기 → 고쳐쓰기', '내용 조직하기 → 계획하기 → 내용 생성하기 → 고쳐쓰기 → 글쓰기'], answer: 0,
+              explain: '계획(주제·목적·독자·매체 정하기) → 생성(자료 모으기) → 조직(개요 짜기) → 쓰기 → 고쳐쓰기 순서! 서술형으로도 나왔던 내용이에요.' },
+            { topic: '글쓰기 과정', q: '글쓰기의 "계획하기" 단계에서 생각할 내용이 아닌 것은?',
+              options: ['맞춤법이 틀린 곳이 있는지', '글의 주제', '글을 쓰는 목적', '예상 독자', '글을 실을 매체'], answer: 0,
+              explain: '맞춤법 확인은 마지막 "고쳐쓰기" 단계에서 해요.' },
+            { topic: '자료 선별', q: '글을 쓰기 위해 모은 자료를 고르는 기준으로 가장 적절한 것은?',
+              options: ['글의 목적과 주제에 맞고 출처가 믿을 만한가?', '가장 오래전에 만들어진 자료인가?', '분량이 가장 많은 자료인가?', '유명한 사람이 소개한 자료인가?', '최대한 많은 종류의 형식을 담았는가?'], answer: 0,
+              explain: '주제에 맞는지, 믿을 만한지(출처·정확성)가 핵심 기준이에요. 주제에서 벗어난 자료는 재미있어도 빼요.' },
+            { topic: '정보 전달 글', q: '정보를 전달하는 글을 쓸 때 주의할 점으로 적절하지 않은 것은?',
+              options: ['독자의 흥미를 끌기 위해 내용을 조금 과장해도 된다.', '자료의 내용이 정확한지 확인한다.', '자료의 출처를 밝히고 내용을 왜곡하지 않는다.', '글의 주제에서 벗어난 문장이 없는지 확인한다.', '독자가 이해하기 쉽게 표나 그래프를 활용한다.'], answer: 0,
+              explain: '정보 전달 글은 정확성이 가장 중요해요. 과장·왜곡은 안 돼요.' },
+            { topic: '품사', q: '품사를 "기능"에 따라 나눌 때, 관형사와 부사를 함께 부르는 이름은?',
+              options: ['수식언', '체언', '용언', '관계언', '독립언'], answer: 0,
+              explain: '체언(명사·대명사·수사) / 용언(동사·형용사) / 수식언(관형사·부사) / 관계언(조사) / 독립언(감탄사)' },
+            { topic: '품사', passage: '동생이 밥을 맛있게 먹었다.',
+              q: '위 문장에서 형태가 변하는 단어(가변어)만 모은 것은?',
+              options: ['맛있게, 먹었다', '동생, 밥', '이, 을', '동생, 이, 밥, 을', '이, 을, 먹었다'], answer: 0,
+              explain: '용언(동사·형용사)은 모양이 바뀌어요: 맛있다→맛있게, 먹다→먹었다. 명사와 조사는 불변어예요. (예외: 조사 "이다"는 가변어)' },
+            { topic: '품사', q: '[ ] 안 단어의 품사가 나머지와 다른 것은?',
+              options: ['[둘]에 셋을 더하면 다섯이다.', '사과 [두] 개를 샀다.', '[세] 사람이 걸어온다.', '오늘은 [첫] 수업 날이다.', '[새] 신발을 신었다.'], answer: 0,
+              explain: '"둘"은 조사가 붙는 수사(체언)예요. 나머지는 뒤의 명사를 꾸미는 관형사예요. 조사가 붙으면 수사, 명사를 꾸미면 관형사!' },
+            { topic: '품사', q: '다음 중 품사가 형용사인 것은?',
+              options: ['기쁘다', '달리다', '읽다', '먹다', '서성대다'], answer: 0,
+              explain: '"기쁘자(청유형)", "기뻐라(명령형)", "기쁜다"가 어색하면 형용사예요. 나머지는 움직임을 나타내는 동사예요.' },
+            { topic: '용언의 활용', q: '다음 중 자연스러운 문장은?',
+              options: ['우리 같이 책을 읽자.', '하늘이 푸른다.', '날씨가 춥는다.', '동생아, 이제 슬퍼라.', '꽃이 참 예쁜다.'], answer: 0,
+              explain: '형용사에는 현재형 "-는다/-ㄴ다", 청유형 "-자", 명령형 "-아라/-어라"를 붙일 수 없어요. "읽다"는 동사라 "읽자"가 가능해요.' },
+            { topic: '조사', q: '조사에 대한 설명으로 적절하지 않은 것은?',
+              options: ['혼자서도 쓰일 수 있어 앞말과 띄어 쓴다.', '다른 말과의 문법적 관계를 나타낸다.', '"도, 만"처럼 특별한 뜻을 더해 주기도 한다.', '기본적으로 형태가 변하지 않는다.', '예외적으로 "이다"는 형태가 변한다.'], answer: 0,
+              explain: '조사는 혼자 쓰이지 못하고 앞말에 붙여 써요. (예: 너밖에, 나도, 사과만)' },
+            { topic: '띄어쓰기', q: '띄어쓰기가 바른 문장은?',
+              options: ['도서관에서 책 세 권을 빌렸다.', '물 한모금만 마실게.', '실수하다 보면 그럴수도 있지.', '내 편은 너 밖에 없어.', '운동화 두켤레를 샀다.'], answer: 0,
+              explain: '단위 명사는 띄어 써요(한 모금, 두 켤레, 세 권). 의존 명사도 띄어 써요(그럴 수도). "밖에"는 조사라 붙여 써요(너밖에).' },
+            { topic: '매체', q: '대중 매체의 종류를 바르게 연결한 것은?',
+              options: ['신문 - 인쇄 매체, 라디오 - 음성 매체, 텔레비전 - 영상 매체', '신문 - 영상 매체, 라디오 - 음성 매체, 텔레비전 - 인쇄 매체', '신문 - 인쇄 매체, 라디오 - 영상 매체, 텔레비전 - 음성 매체', '신문 - 음성 매체, 라디오 - 인쇄 매체, 텔레비전 - 영상 매체', '신문 - 영상 매체, 라디오 - 인쇄 매체, 텔레비전 - 음성 매체'], answer: 0,
+              explain: '책·신문 = 인쇄 / 라디오 = 음성 / 텔레비전 = 영상. 인터넷·스마트폰은 새로운 전달 매체예요.' },
+            { topic: '매체', q: '대중 매체와 개인 인터넷 방송을 비교한 내용으로 적절하지 않은 것은?',
+              options: ['개인 인터넷 방송은 전문가만 만들 수 있고, 대중 매체는 누구나 만들 수 있다.', '대중 매체는 여러 분야의 전문 인력이 함께 제작한다.', '개인 인터넷 방송은 개인이 기획·촬영·편집을 맡는 경우가 많다.', '대중 매체는 제작에 많은 시간과 비용이 든다.', '개인 인터넷 방송은 실시간 채팅 등으로 쌍방향 소통이 쉽다.'], answer: 0,
+              explain: '거꾸로예요! 개인 인터넷 방송은 전문성이 없어도 누구나 만들 수 있어요. 그래서 수용자는 정보가 정확한지 비판적으로 봐야 해요.' },
+            { topic: '매체', q: '대중 매체가 사회에 "긍정적인 영향"을 준 사례로 가장 적절한 것은?',
+              options: ['산불 피해 뉴스를 보고 친구들과 함께 피해 지역에 기부했다.', '과장된 건강 프로그램을 보고 효과 없는 약을 샀다.', '라디오의 잘못된 교통 정보 때문에 약속에 늦었다.', '한쪽 입장만 쓴 기사를 보고 연예인을 욕했다.', '자극적인 드라마를 보고 나쁜 행동을 따라 했다.'], answer: 0,
+              explain: '대중 매체는 영향력이 커서 좋은 행동을 이끌 수도, 잘못된 정보로 피해를 줄 수도 있어요. ①만 긍정적 영향이에요.' },
+            { topic: '예측하며 읽기', q: '글을 읽기 전에 "예측하기"를 할 때 활용하기 어려운 것은?',
+              options: ['글을 끝까지 읽고 확인한 결론', '글의 제목', '소제목', '글에 실린 사진', '글쓴이에 대한 정보'], answer: 0,
+              explain: '예측하기는 읽기 "전·중"에 제목, 소제목, 사진 등 단서로 내용을 짐작하는 거예요. 예측이 틀려도 바로잡으며 더 깊이 이해할 수 있어요.' },
+            { topic: '토의', q: '토의에 대한 설명으로 옳지 않은 것은?',
+              options: ['찬성과 반대로 나뉘어 상대방의 주장을 논리적으로 반박한다.', '여러 사람이 의견을 나누어 문제의 해결 방안을 찾는다.', '사회자, 토의자, 청중이 각자의 역할을 맡는다.', '서로의 의견을 존중하고 협력하는 태도가 필요하다.', '여러 의견을 모아 절충안을 만들기도 한다.'], answer: 0,
+              explain: '찬반으로 나뉘어 겨루는 것은 "토론"이에요. 토의는 함께 가장 좋은 해결책을 찾는 협력 말하기예요.' },
+            { topic: '토의', q: '일반적인 토의 진행 순서로 알맞은 것은?',
+              options: ['토의자 의견 발표 → 토의자끼리 의견 교환 → 청중 질문과 답변 → 사회자 정리', '청중 질문과 답변 → 토의자 의견 발표 → 토의자끼리 의견 교환 → 사회자 정리', '토의자끼리 의견 교환 → 토의자 의견 발표 → 청중 질문과 답변 → 사회자 정리', '토의자 의견 발표 → 청중 질문과 답변 → 토의자끼리 의견 교환 → 사회자 정리', '사회자 정리 → 토의자 의견 발표 → 청중 질문과 답변 → 토의자끼리 의견 교환'], answer: 0,
+              explain: '발표 → 의견 교환 → 청중 질문 → 정리. 사회자는 주제 소개, 진행, 의견 정리(절충안 정리)를 맡아요.' },
+            { topic: '근거 판단', passage: '광고: "올해의 디자인상을 받은 \'똑똑 학습기\'! 이 학습기를 쓰면 누구나 성적이 오릅니다!"',
+              q: '"디자인상을 받았으니 성적이 오를 것"이라는 말의 문제점으로 가장 알맞은 것은?',
+              options: ['근거와 주장 사이에 연관성이 없다.', '근거가 지나치게 많다.', '주장이 너무 구체적이다.', '정보의 출처가 너무 정확하다.', '근거와 주장이 모두 없다.'], answer: 0,
+              explain: '디자인이 예쁜 것과 성적이 오르는 것은 관계가 없어요. 광고·연설을 들을 때는 근거가 주장을 제대로 뒷받침하는지 따져 봐야 해요.' },
+            { topic: '근거 판단', passage: '"대한민국 대표 요리사 유민석도 우리 동아리 부원이었기 때문에 최고의 요리사가 되었습니다."',
+              q: '위 근거를 판단한 내용으로 가장 적절한 것은?',
+              options: ['요리사가 된 데에는 동아리 말고도 다른 이유(노력, 재능 등)가 있을 수 있다.', '주장을 완벽하게 뒷받침하는 근거이다.', '근거로부터 주장을 이끄는 과정에 오류가 전혀 없다.', '주장과 전혀 관련 없는 근거이다.', '근거가 없고 주장만 있다.'], answer: 0,
+              explain: '한 사람의 성공을 동아리 덕분이라고만 볼 수 없어요. "근거로부터 주장을 이끄는 과정에 영향을 주는 다른 정보는 없는가?"를 따져야 해요.' },
+            { topic: '관용 표현', q: '"귀가 얇다"의 뜻으로 가장 알맞은 것은?',
+              options: ['남의 말을 쉽게 받아들여 잘 믿는다.', '작은 소리도 잘 듣는다.', '남의 말을 잘 듣지 않는다.', '비밀을 잘 지킨다.', '근거를 꼼꼼히 따지는 습관이 있다.'], answer: 0,
+              explain: '"귀가 얇다" = 남의 말을 쉽게 믿어서 손해를 볼 수 있다는 뜻이에요.' }
+        ];
+        const POSTCARD = "Hi Jisu,\n   I'm in Santorini, Greece. The houses here are white, and the roofs are blue. Yesterday, I enjoyed swimming in the sea. The water was very clear. Now, I'm eating Greek salad at a restaurant near the beach. Tomorrow, I'm going to watch the sunset in Oia. It's famous for its beautiful sunsets. I'm really looking forward to it.\nYour friend,\nHana";
+        QUESTIONS.영어 = [
+            { topic: 'be going to', q: 'I (        ) visit Jeju-do with my family this summer.',
+              options: ['am going to', 'going to', 'am go to', 'will going to', 'am going'], answer: 0,
+              explain: '미래 계획: be동사 + going to + 동사원형 → I am going to visit' },
+            { topic: 'be going to', q: 'A: What (        ) you going to do this weekend?\nB: I\'m going to watch a movie.',
+              options: ['are', 'do', 'will', 'is', 'did'], answer: 0,
+              explain: '의문문: What + be동사 + 주어 + going to ~? 주어가 you니까 are!' },
+            { topic: 'look forward to', q: 'I\'m really looking forward (        ) the Lavender Garden.',
+              options: ['to visiting', 'to visit', 'visit', 'visiting', 'visited'], answer: 0,
+              explain: 'look forward to 에서 to는 전치사라 뒤에 -ing가 와요 → looking forward to visiting' },
+            { topic: '동명사 / to부정사', q: 'She enjoys (        ) pictures of blue streets.',
+              options: ['taking', 'to take', 'take', 'took', 'takes'], answer: 0,
+              explain: 'enjoy 뒤에는 -ing(동명사)! enjoy taking' },
+            { topic: '동명사 / to부정사', q: '빈칸에 "riding"이 들어갈 수 없는 것은?',
+              options: ['He plans (      ) a bike.', 'He is good at (      ) a bike.', 'He enjoys (      ) a bike.', 'He is (      ) a bike now.', 'My hobby is (      ) a bike.'], answer: 0,
+              explain: 'plan은 to부정사를 써요 → plans to ride. (전치사 at 뒤, enjoy 뒤, 진행형, 보어 자리는 riding 가능)' },
+            { topic: '동명사 / to부정사', q: 'I hope to travel around the world, so I decided (        ) English harder.',
+              options: ['to study', 'studying', 'study', 'studied', 'to studying'], answer: 0,
+              explain: 'decide, hope, plan, want 뒤에는 to부정사! decided to study' },
+            { topic: '동명사 주어', q: 'Taking a walk with my dog (        ) me tired.',
+              options: ['makes', 'make', 'making', 'are making', 'to make'], answer: 0,
+              explain: '동명사(Taking a walk) 주어는 단수 취급 → makes' },
+            { topic: 'its / it\'s', q: 'Chefchaouen is famous for (        ) blue buildings.',
+              options: ['its', 'it\'s', 'it', 'it is', 'their'], answer: 0,
+              explain: 'its = 그것의 (소유격), it\'s = it is. "그곳의 파란 건물"이니까 its!' },
+            { topic: '과거시제', q: '어법상 옳은 문장은?',
+              options: ['She went shopping with Tom yesterday.', 'We didn\'t finished the project.', 'He watches the movie three weeks ago.', 'They maded a cake for their mom.', 'She went to the park tomorrow.'], answer: 0,
+              explain: 'didn\'t 뒤엔 동사원형(finish), ago는 과거(watched), make의 과거는 made, tomorrow는 미래(will go / is going to go)' },
+            { topic: '어법 오류 찾기', passage: 'My sister loves music. She enjoys sing songs. Playing the piano are fun for her. She is going to visits a concert tomorrow. She is looking forward to it.',
+              q: '위 글에서 어법상 틀린 곳은 모두 몇 개인가?',
+              options: ['3개', '1개', '2개', '4개', '5개'], answer: 0,
+              explain: '① enjoys sing → singing\n② Playing the piano are → is (동명사 주어는 단수)\n③ is going to visits → visit\n총 3개!' },
+            { topic: 'There is / are', q: 'Yesterday, there (        ) many people in the park.',
+              options: ['were', 'was', 'are', 'is', 'be'], answer: 0,
+              explain: 'Yesterday(과거) + many people(복수) → there were' },
+            { topic: 'There is / are', q: '어법상 옳은 문장은?',
+              options: ['Is there a bank near here?', 'There is two cats under the desk.', 'There are a book on the table.', 'There weren\'t an empty seat on the bus.', 'Are there a pen in your bag?'], answer: 0,
+              explain: '뒤에 오는 명사가 단수면 is/was, 복수면 are/were. a bank(단수) → Is there ~?' },
+            { topic: '비교급 / 최상급', q: 'This book is (        ) of all. (이 책이 그중에서 가장 비싸다.)',
+              options: ['the most expensive', 'most expensive', 'the expensivest', 'more expensive', 'the more expensive'], answer: 0,
+              explain: '긴 단어의 최상급은 the most + 형용사 → the most expensive' },
+            { topic: '비교급 / 최상급', q: 'Math is (        ) difficult than science for me.',
+              options: ['more', 'most', 'the most', 'much more than', 'very'], answer: 0,
+              explain: 'than이 있으면 비교급! 긴 단어는 more + 형용사 → more difficult than' },
+            { topic: '비교급 / 최상급', q: 'Ahn runs faster than all the other students. Ahn is (        ) student in her class.',
+              options: ['the fastest', 'the faster', 'fastest', 'faster', 'the most fast'], answer: 0,
+              explain: '짧은 단어 최상급: the + 형용사-est → the fastest' },
+            { topic: '4형식 → 3형식', q: 'She taught me English. = She taught English (        ) me.',
+              options: ['to', 'for', 'of', 'at', 'with'], answer: 0,
+              explain: 'teach, give, show, tell, send → to\nmake, buy, cook → for\n예) He made a doll for me.' },
+            { topic: '4형식 → 3형식', q: '"He made me a doll."을 3형식으로 바르게 바꾼 것은?',
+              options: ['He made a doll for me.', 'He made a doll to me.', 'He made me for a doll.', 'He made to me a doll.', 'He made a doll me.'], answer: 0,
+              explain: 'make는 for를 써요 → He made a doll for me.' },
+            { topic: '4형식 → 3형식', q: '어법상 가장 적절한 문장은?',
+              options: ['I will show my garden to you.', 'I will show my garden you.', 'I will give flowers for my friend.', 'He told his top secrets me.', 'I will buy a present to my father.'], answer: 0,
+              explain: '3형식은 "물건 + 전치사 + 사람" 순서! show/give/tell → to, buy → for' },
+            { topic: '접속사', q: 'The field was wet and slippery, (        ) we played without shoes.',
+              options: ['so', 'but', 'or', 'because', 'for example'], answer: 0,
+              explain: '원인(미끄러웠다) → 결과(신발 없이 했다) : so (그래서)' },
+            { topic: '접속사', q: 'I ran after him, (  A  ) I couldn\'t catch him. He was faster than me. (  B  ), the old man was not old. He was a young man.',
+              options: ['(A) but - (B) In fact', '(A) so - (B) In fact', '(A) but - (B) For example', '(A) for example - (B) but', '(A) so - (B) For example'], answer: 0,
+              explain: '(A) 쫓아갔지만 못 잡았다 → but\n(B) 사실은 노인이 아니었다 → In fact (사실은)' },
+            { topic: '영영풀이', q: '단어의 영영풀이로 알맞지 않은 것은?',
+              options: ['lose: to win a game or a match', 'change: to make or become different', 'universe: all of space and everything in it', 'floating: staying on the water or in the air', 'take off: to stop wearing something'], answer: 0,
+              explain: 'lose는 "(경기에서) 지다" 예요. win이 이기다!' },
+            { topic: '어휘', q: 'Everyone knows that the sun rises in the east. It\'s (        ).',
+              options: ['obvious', 'impossible', 'slippery', 'floating', 'wrong'], answer: 0,
+              explain: 'obvious = 명백한, 누구나 아는. impossible 불가능한, slippery 미끄러운, floating 떠 있는' },
+            { topic: '명령문 / that절', q: '"당신의 꿈을 따라가세요!"를 명령문으로 바르게 쓴 것은?',
+              options: ['Follow your dreams!', 'You follows your dreams!', 'Following your dreams!', 'To follow your dreams!', 'Follows your dreams!'], answer: 0,
+              explain: '명령문은 주어 없이 동사원형으로 시작해요 → Follow your dreams!' },
+            { topic: '명령문 / that절', q: '"우리는 그것들이 현실이 될 수 있다고 믿는다."를 영어로 바르게 쓴 것은?',
+              options: ['We believe that they can come true.', 'We believe that they can comes true.', 'We believe they that can come true.', 'We believe that can they come true.', 'We believes that they can come true.'], answer: 0,
+              explain: 'believe/think/know + that + 주어 + 동사. can 뒤엔 동사원형(come)!' },
+            { topic: '대화', q: '대화가 어색한 것은?',
+              options: ['A: Do you have any plans for this weekend?\nB: Yes, I went to an amusement park.', 'A: How was the concert last night?\nB: Great! I enjoyed my favorite songs.', 'A: I\'m going to travel to Venice.\nB: That\'s awesome! What are you going to do there?', 'A: What are you going to do this summer?\nB: I\'m going to take swimming lessons.', 'A: Is this your first trip to Jeju-do?\nB: Yes, and I\'m very excited.'], answer: 0,
+              explain: '주말 "계획(미래)"을 물었는데 "갔다(과거)"로 답해서 어색해요. → I\'m going to go to ~' },
+            { topic: '독해', passage: POSTCARD,
+              q: '윗글의 내용과 일치하지 않는 것은?',
+              options: ['Hana is going to swim in the sea tomorrow.', 'The roofs of the houses are blue.', 'Hana is eating Greek salad now.', 'Oia is famous for its beautiful sunsets.', 'The sea water was very clear.'], answer: 0,
+              explain: '수영은 어제(Yesterday) 했어요. 내일은 Oia에서 노을(sunset)을 볼 계획이에요.' },
+            { topic: '독해', passage: POSTCARD,
+              q: '윗글에서 답을 찾을 수 없는 질문은?',
+              options: ['How long is Hana going to stay in Santorini?', 'What color are the houses?', 'What did Hana enjoy yesterday?', 'Where is Hana eating now?', 'What is Hana going to do tomorrow?'], answer: 0,
+              explain: '며칠 머무는지는 글에 나오지 않아요.' },
+            { topic: '독해', passage: POSTCARD,
+              q: 'What is Hana looking forward to?',
+              options: ['watching the sunset in Oia', 'swimming in the sea', 'eating Greek salad', 'going back to Korea', 'buying souvenirs'], answer: 0,
+              explain: '"Tomorrow, I\'m going to watch the sunset in Oia. ... I\'m really looking forward to it." → it = watching the sunset in Oia' }
+        ];
+        const FIG_ZIGZAG = '<svg width="300" height="190" viewBox="0 0 300 190" font-family="Malgun Gothic" font-size="16" fill="currentColor">'
+            + '<line x1="10" y1="40" x2="290" y2="40" stroke="currentColor" stroke-width="2"/><text x="272" y="30">l</text>'
+            + '<line x1="10" y1="160" x2="290" y2="160" stroke="currentColor" stroke-width="2"/><text x="270" y="150">m</text>'
+            + '<polyline points="60,40 200,100 60,160" fill="none" stroke="#d9731f" stroke-width="2.5"/>'
+            + '<text x="92" y="62" style="fill:var(--bad)">40°</text><text x="92" y="152" style="fill:var(--bad)">35°</text>'
+            + '<text x="172" y="106" style="fill:var(--accent)" font-weight="bold">x</text></svg>';
+        const FIG_TRAP = '<svg width="280" height="215" viewBox="0 0 280 215" font-family="Malgun Gothic" font-size="15" fill="currentColor">'
+            + '<polygon points="130,25 250,25 250,185 10,185" style="fill:var(--accent-soft)" stroke="currentColor" stroke-width="2"/>'
+            + '<polyline points="240,25 240,35 250,35" fill="none" stroke="currentColor"/><polyline points="240,185 240,175 250,175" fill="none" stroke="currentColor"/>'
+            + '<text x="120" y="18">A</text><text x="252" y="18">D</text><text x="0" y="205">B</text><text x="252" y="205">C</text>'
+            + '<text x="183" y="18">6</text><text x="258" y="110">8</text><text x="125" y="205">12</text><text x="52" y="100">10</text></svg>';
+        QUESTIONS.수학 = [
+            { topic: '정비례', passage: 'x : 3, 6, 9, 12\ny : 2, A, B, 8',
+              q: '표에서 y가 x에 정비례할 때, A + B의 값은?',
+              options: ['10', '8', '9', '12', '14'], answer: 0,
+              explain: 'y = ax에 (3, 2) 대입 → a = 2/3, y = (2/3)x\nA = (2/3)×6 = 4, B = (2/3)×9 = 6 → A + B = 10' },
+            { topic: '반비례', q: 'y = 18/x 의 그래프 위의 점인 것은?',
+              options: ['(−3, −6)', '(3, −6)', '(2, 8)', '(−2, 9)', '(6, 2)'], answer: 0,
+              explain: '반비례 y = a/x 위의 점은 x × y = a 예요. (−3)×(−6) = 18 ✔\n나머지: −18, 16, −18, 12' },
+            { topic: '반비례', q: 'y = −6/x 의 그래프에 대한 설명으로 옳지 않은 것은?',
+              options: ['x > 0일 때, x의 값이 증가하면 y의 값은 감소한다.', '좌표축과 만나지 않는다.', '원점에 대하여 대칭이다.', '점 (2, −3)을 지난다.', '제2사분면과 제4사분면을 지나는 한 쌍의 곡선이다.'], answer: 0,
+              explain: 'a < 0인 반비례는 각 사분면에서 x가 증가하면 y도 "증가"해요.\n예) x=1 → y=−6, x=2 → y=−3 (커짐)' },
+            { topic: '정비례·반비례 교점', q: '정비례 y = 3x 의 그래프와 반비례 y = a/x 의 그래프가 만나는 점 P의 x좌표가 2일 때, 상수 a의 값은?',
+              options: ['12', '6', '8', '10', '18'], answer: 0,
+              explain: 'P는 y = 3x 위의 점 → P(2, 6)\nP는 y = a/x 위의 점이기도 함 → a = 2 × 6 = 12' },
+            { topic: '정비례 그래프', q: '정비례 y = ax 의 그래프가 점 (2, 5)를 지나고, 점 (−1, m)도 지날 때 m의 값은?',
+              options: ['−5/2', '5/2', '−2', '−5', '−2/5'], answer: 0,
+              explain: '(2, 5) 대입 → 5 = 2a → a = 5/2\n(−1, m) 대입 → m = (5/2)×(−1) = −5/2' },
+            { topic: '좌표와 사분면', q: 'ab < 0, a > b 일 때, 점 (b, −a)는 제 몇 사분면 위의 점인가?',
+              options: ['제3사분면', '제1사분면', '제2사분면', '제4사분면', '어느 사분면에도 있지 않다.'], answer: 0,
+              explain: 'ab < 0 → 부호가 서로 다름, a > b → a는 양수, b는 음수\n(b, −a) = (음수, 음수) → 제3사분면' },
+            { topic: '좌표와 사분면', q: '점 A(a + 2, 2a − 6)이 x축 위의 점일 때, 점 A의 좌표는?',
+              options: ['(5, 0)', '(0, 5)', '(3, 0)', '(2, 0)', '(0, −6)'], answer: 0,
+              explain: 'x축 위의 점은 y좌표가 0 → 2a − 6 = 0 → a = 3\nA(3 + 2, 0) = (5, 0)\n(참고: y축 위의 점은 x좌표가 0)' },
+            { topic: '반비례 활용', q: '매분 24L씩 25분 동안 물을 넣으면 가득 차는 물탱크가 있다. 이 물탱크에 매분 40L씩 물을 넣으면 가득 채우는 데 몇 분이 걸리는가?',
+              options: ['15분', '12분', '18분', '20분', '25분'], answer: 0,
+              explain: '전체 물의 양 = 24 × 25 = 600L\n매분 xL씩 y분 → xy = 600 → y = 600/x (반비례)\nx = 40 → y = 15분' },
+            { topic: '정비례 활용', q: 'y = (4/3)x 의 그래프 위의 점 A에서 x축에 수직인 직선을 그어 x축과 만나는 점을 B(6, 0)이라 할 때, 삼각형 AOB의 넓이는? (O는 원점)',
+              options: ['24', '48', '12', '36', '18'], answer: 0,
+              explain: 'A의 x좌표 = 6 → y = (4/3)×6 = 8 → A(6, 8)\n넓이 = 밑변 6 × 높이 8 ÷ 2 = 24' },
+            { topic: '반비례 활용', q: '반비례 y = a/x (x > 0)의 그래프 위의 두 점 P, Q의 x좌표가 각각 1, 3이고 y좌표의 차가 4일 때, 양수 a의 값은?',
+              options: ['6', '4', '8', '12', '3'], answer: 0,
+              explain: 'P(1, a), Q(3, a/3)\na − a/3 = 4 → 2a/3 = 4 → a = 6' },
+            { topic: '그래프 해석', passage: '자전거를 탈 때 시간에 따른 속력\n· 0초 ~ 30초 : 속력이 0에서 20m/s까지 점점 증가\n· 30초 ~ 180초 : 속력 20m/s로 일정\n· 180초 ~ 240초 : 속력이 점점 감소하여 240초에 0이 됨',
+              q: '위 내용에 대한 설명으로 옳지 않은 것은?',
+              options: ['자전거는 도중에 150초 동안 멈춰 있었다.', '가장 빠를 때의 속력은 20m/s이다.', '일정한 속력으로 달린 시간은 150초이다.', '180초에서 240초 사이에는 속력이 감소한다.', '240초가 되었을 때 멈췄다.'], answer: 0,
+              explain: '30~180초는 "멈춘" 게 아니라 20m/s로 "일정하게" 달린 거예요. 속력 그래프가 수평이면 같은 속력, 0이어야 멈춘 거예요.' },
+            { topic: '기본 도형', passage: 'ㄱ. 교점은 선과 선이 만나는 경우에만 생긴다.\nㄴ. 두 점을 지나는 직선은 오직 하나뿐이다.\nㄷ. 두 점 사이의 거리는 두 점을 양 끝점으로 하는 선분의 길이이다.\nㄹ. 서로 다른 두 직선이 한 직선과 만날 때, 동위각의 크기는 항상 같다.\nㅁ. 두 직선이 한 점에서 만날 때, 그 점을 중점이라 한다.',
+              q: '옳은 것만을 있는 대로 고른 것은?',
+              options: ['ㄴ, ㄷ', 'ㄱ, ㄴ, ㄷ', 'ㄴ, ㄷ, ㄹ', 'ㄷ, ㄹ', 'ㄷ, ㄹ, ㅁ'], answer: 0,
+              explain: 'ㄱ ✗ 선과 면이 만나도 교점이 생겨요.\nㄹ ✗ 두 직선이 "평행할 때만" 동위각이 같아요.\nㅁ ✗ 두 직선이 만나는 점은 "교점". 중점은 선분을 반으로 나누는 점!' },
+            { topic: '직선·반직선·선분', passage: '한 직선 위에 네 점이 A, B, C, D 순서로 있다.\n  A ─── B ─── C ─── D',
+              q: '반직선 CA와 같은 것은?',
+              options: ['반직선 CB', '반직선 AC', '반직선 CD', '선분 CA', '직선 AC'], answer: 0,
+              explain: '반직선은 "시작점"과 "방향"이 같아야 같아요. 반직선 CA = C에서 출발해 A 쪽으로 → 반직선 CB와 같아요.\n반직선 AC는 시작점이 A라 달라요.' },
+            { topic: '직선·반직선·선분', passage: '한 직선 위에 네 점이 A, B, C, D 순서로 있다.\n  A ─── B ─── C ─── D',
+              q: '직선 AB와 같지 않은 것은?',
+              options: ['반직선 AD', '직선 BC', '직선 AD', '직선 CD', '직선 BA'], answer: 0,
+              explain: '네 점이 한 직선 위에 있으니 "직선"은 모두 같아요. 반직선 AD는 A에서 한쪽으로만 뻗으니 달라요.' },
+            { topic: '교점과 교선', q: '삼각기둥에서 교점의 개수를 a, 교선의 개수를 b라 할 때, a + b의 값은?',
+              options: ['15', '14', '12', '18', '11'], answer: 0,
+              explain: '입체도형에서 교점 = 꼭짓점, 교선 = 모서리\n삼각기둥: 꼭짓점 6개, 모서리 9개 → 15' },
+            { topic: '맞꼭지각', q: '두 직선이 한 점에서 만날 때 생기는 맞꼭지각의 크기가 각각 (3x + 10)°, (5x − 30)°이다. x의 값은?',
+              options: ['20', '10', '25', '30', '40'], answer: 0,
+              explain: '맞꼭지각은 크기가 같아요 → 3x + 10 = 5x − 30 → 2x = 40 → x = 20' },
+            { topic: '평행선의 성질', q: '두 직선 l, m이 다른 한 직선과 만날 때, l ∥ m 인 경우는?',
+              options: ['동위각의 크기가 70°, 70°', '엇각의 크기가 60°, 70°', '동위각의 크기가 80°, 100°', '엇각의 크기가 50°, 130°', '동위각의 크기가 45°, 55°'], answer: 0,
+              explain: '동위각 또는 엇각의 크기가 "같으면" 두 직선은 평행해요.' },
+            { topic: '평행선의 성질', q: 'l ∥ m 일 때, 한 직선과 만나서 생긴 동위각의 크기가 각각 (2x + 10)°, 70°이다. x의 값은?',
+              options: ['30', '35', '40', '25', '20'], answer: 0,
+              explain: '평행선에서 동위각은 같아요 → 2x + 10 = 70 → x = 30' },
+            { topic: '평행선의 성질', fig: FIG_ZIGZAG,
+              q: '그림에서 l ∥ m 일 때, ∠x의 크기는?',
+              options: ['75°', '65°', '70°', '80°', '105°'], answer: 0,
+              explain: '꺾인 점을 지나고 l, m에 평행한 직선을 그어요.\n엇각끼리 같으므로 ∠x = 40° + 35° = 75°\n(꺾인 선 문제는 "평행선 하나 더 긋기"가 핵심!)' },
+            { topic: '점과 직선 사이의 거리', fig: FIG_TRAP,
+              q: '∠C = ∠D = 90°인 사다리꼴 ABCD에서 점 A와 변 CD 사이의 거리를 x, 점 B와 변 AD 사이의 거리를 y라 할 때, x + y의 값은?',
+              options: ['14', '16', '18', '20', '22'], answer: 0,
+              explain: '점과 직선 사이의 거리 = 수선의 발까지의 길이\nA에서 CD에 내린 수선 = AD = 6 → x = 6\nB에서 AD(의 연장선)에 내린 수선 = DC와 같음 = 8 → y = 8\nx + y = 14 (AB = 10은 함정!)' },
+            { topic: '공간에서의 위치 관계', q: '직육면체 ABCD-EFGH (윗면 ABCD, 아랫면 EFGH, A 아래가 E)에서 모서리 AB와 꼬인 위치에 있는 모서리의 개수는?',
+              options: ['4개', '2개', '3개', '5개', '6개'], answer: 0,
+              explain: '평행: DC, EF, HG / 만남: AD, BC, AE, BF\n꼬인 위치(안 만나고 평행도 아님): CG, DH, EH, FG → 4개' },
+            { topic: '공간에서의 위치 관계', q: '직육면체 ABCD-EFGH (윗면 ABCD, 아랫면 EFGH, A 아래가 E)에서 모서리 AE와 평행한 면을 모두 고른 것은?',
+              options: ['면 BFGC, 면 CGHD', '면 ABCD, 면 EFGH', '면 ABFE, 면 AEHD', '면 ABFE, 면 BFGC', '면 CGHD, 면 EFGH'], answer: 0,
+              explain: 'AE를 포함하는 면: ABFE, AEHD\nAE와 수직인 면: ABCD, EFGH\nAE와 평행한 면(만나지 않는 옆면): BFGC, CGHD' },
+            { topic: '공간에서의 위치 관계', q: '공간에서 항상 참인 것은?',
+              options: ['한 직선에 수직인 서로 다른 두 평면은 서로 평행하다.', '한 평면에 평행한 서로 다른 두 직선은 서로 평행하다.', '한 직선에 수직인 서로 다른 두 직선은 서로 평행하다.', '한 평면에 수직인 서로 다른 두 평면은 서로 평행하다.', '서로 만나지 않는 두 직선은 항상 평행하다.'], answer: 0,
+              explain: '공간에서는 "꼬인 위치"가 있어서 평면에서 되던 것이 안 될 때가 많아요. 직육면체 모서리·면으로 직접 확인해 보세요!\n예) 만나지 않는 두 직선 → 평행 또는 꼬인 위치' }
+        ];
+        QUESTIONS.과학 = [
+            { topic: '마찰력', q: '물체가 어떤 면에 접촉해 있을 때, 접촉면에서 물체의 운동을 방해하는 힘은?',
+              options: ['마찰력', '중력', '부력', '탄성력', '자기력'], answer: 0,
+              explain: '마찰력은 접촉면에서 물체의 운동을 방해하는 힘이고, 운동(하려는) 방향과 반대로 작용해요.' },
+            { topic: '마찰력', q: '마찰력에 대한 설명으로 옳은 것은?',
+              options: ['물체의 무게가 무거울수록 마찰력이 크다.', '물체의 운동 방향과 같은 방향으로 작용한다.', '접촉면이 매끄러울수록 마찰력이 크다.', '물체에 힘을 가했는데 움직이지 않았다면 마찰력은 0N이다.', '마찰력은 물체가 움직일 때만 작용한다.'], answer: 0,
+              explain: '마찰력은 무게가 무거울수록, 접촉면이 거칠수록 커요.\n힘을 줬는데 안 움직였다면 → 마찰력이 가한 힘만큼 반대로 작용하고 있는 것 (0N이 아님!)' },
+            { topic: '마찰력', q: '빗면 위에 올려놓은 나무 도막이 빗면을 따라 미끄러져 내려가고 있다. 나무 도막에 작용하는 마찰력의 방향은?',
+              options: ['빗면을 따라 위쪽', '빗면을 따라 아래쪽', '연직 아래쪽', '빗면에 수직인 위쪽', '마찰력은 작용하지 않는다.'], answer: 0,
+              explain: '마찰력은 운동 방향과 반대! 아래로 미끄러지니까 마찰력은 빗면 위쪽으로 작용해요.' },
+            { topic: '마찰력', q: '마찰력을 "작게" 하여 편리하게 이용하는 경우는?',
+              options: ['기계의 톱니바퀴에 윤활유를 바른다.', '바이올린 활에 송진을 바른다.', '눈길에서 자동차 타이어에 체인을 감는다.', '등산화 바닥을 울퉁불퉁하게 만든다.', '빙판길에 모래를 뿌린다.'], answer: 0,
+              explain: '윤활유, 스케이트 날, 창문 틀 바퀴 → 마찰력 작게\n송진, 체인, 울퉁불퉁한 바닥, 모래 → 마찰력 크게' },
+            { topic: '마찰력 실험', passage: '무게가 같은 나무 도막 (가), (나)의 한 면에만 사포를 붙였다.\n(가)는 사포 면이 위, (나)는 사포 면이 바닥(나무판 쪽)을 향하게 놓고, 나무판을 천천히 들어 올려 기울기를 크게 했다.',
+              q: '이 실험에 대한 설명으로 옳은 것은?',
+              options: ['(나)가 더 큰 기울기에서 미끄러지므로 마찰력이 더 크다.', '(가)가 더 큰 기울기에서 미끄러지므로 마찰력이 더 크다.', '두 나무 도막은 무게가 같으므로 동시에 미끄러진다.', '이 실험은 무게와 마찰력의 관계를 알아보는 실험이다.', '접촉면이 거칠수록 마찰력이 작아진다.'], answer: 0,
+              explain: '(나)는 거친 사포 면이 나무판에 닿아서 마찰력이 커요 → 더 기울여야 미끄러져요.\n알 수 있는 것: 접촉면이 거칠수록 마찰력이 크다 (서술형 단골!)' },
+            { topic: '부력', q: '부력에 대한 설명으로 옳지 않은 것은?',
+              options: ['물과 같은 액체 속에서만 작용하고 기체 속에서는 작용하지 않는다.', '중력의 반대 방향인 위쪽으로 작용한다.', '물체를 물속에 넣으면 부력 때문에 가벼워진 것처럼 느껴진다.', '빈 배일 때보다 화물을 실어 더 깊이 잠겼을 때 부력이 크다.', '헬륨 풍선이 떠오르는 것은 공기가 위쪽으로 부력을 작용하기 때문이다.'], answer: 0,
+              explain: '부력은 액체와 "기체" 속에서 모두 작용해요. 열기구, 풍등, 헬륨 풍선이 뜨는 이유예요.' },
+            { topic: '부력', q: '부력을 이용한 예가 아닌 것은?',
+              options: ['등산화 바닥을 울퉁불퉁하게 만든다.', '구명조끼를 입는다.', '열기구를 띄운다.', '바다에 부표를 띄운다.', '풍등을 날린다.'], answer: 0,
+              explain: '등산화 바닥은 "마찰력"을 크게 하는 예예요.' },
+            { topic: '부력 측정', passage: '용수철저울에 추를 매달았을 때\n· 공기 중: 5.0N\n· 추가 물에 절반 잠겼을 때: 4.6N\n· 추가 물에 완전히 잠겼을 때: 4.2N',
+              q: '추가 물에 완전히 잠겼을 때 추에 작용하는 부력의 크기는?',
+              options: ['0.8N', '0.4N', '4.2N', '5.0N', '9.2N'], answer: 0,
+              explain: '부력 = 공기 중 무게 − 물속 눈금\n완전히 잠김: 5.0 − 4.2 = 0.8N (절반 잠김: 0.4N)\n→ 잠긴 부피가 클수록 부력이 커요. 단위 N 꼭 쓰기!' },
+            { topic: '부력', q: '물에 잠긴 물체의 부피와 부력의 관계로 옳은 것은?',
+              options: ['물에 잠긴 부피가 클수록 부력이 크다.', '물에 잠긴 부피가 클수록 부력이 작다.', '부력은 잠긴 부피와 관계없이 항상 같다.', '물체의 무게가 무거울수록 부력이 크다.', '물체가 깊이 들어갈수록 부피와 상관없이 부력이 계속 커진다.'], answer: 0,
+              explain: '부력의 크기는 "물에 잠긴 부피"에 따라 달라져요. 완전히 잠긴 뒤에는 더 깊이 넣어도 부력은 같아요.' },
+            { topic: '부력', q: '부피는 같고 무게가 다른 세 물체 A, B, C가 모두 물속에 완전히 잠겨 있다. 세 물체에 작용하는 부력의 크기를 옳게 비교한 것은?',
+              options: ['A = B = C', 'A > B > C', 'A < B < C', 'A = B > C', 'A > B = C'], answer: 0,
+              explain: '부력은 무게가 아니라 "잠긴 부피"로 결정돼요. 부피가 같고 모두 완전히 잠겼으니 부력이 같아요.' },
+            { topic: '부력', passage: '같은 무게의 왕관과 순금 덩어리를 저울 양쪽에 매달아 수평을 맞춘 뒤, 동시에 물속에 넣었더니 저울이 순금 덩어리 쪽으로 기울었다.',
+              q: '이에 대한 설명으로 옳은 것은?',
+              options: ['왕관의 부피가 순금 덩어리보다 크다.', '순금 덩어리에 더 큰 부력이 작용한다.', '왕관과 순금 덩어리의 무게는 다르다.', '왕관과 순금 덩어리에는 아래 방향으로 부력이 작용한다.', '두 물체에 작용하는 부력의 크기는 같다.'], answer: 0,
+              explain: '왕관 쪽이 올라갔다 → 왕관이 부력을 더 받았다 → 왕관의 부피가 더 크다 (순금이 아닐 수 있다!)' },
+            { topic: '변이', q: '변이의 예로 가장 적절한 것은?',
+              options: ['무당벌레마다 등의 점무늬 개수가 다르다.', '개와 고양이는 울음소리가 다르다.', '토끼는 풀을 먹고 사자는 고기를 먹는다.', '참새와 독수리는 크기가 다르다.', '고래와 상어는 사는 곳이 비슷하다.'], answer: 0,
+              explain: '변이 = "같은 종류"의 생물 사이에서 나타나는 특징의 차이. 개와 고양이처럼 다른 종끼리의 차이는 변이가 아니에요.' },
+            { topic: '변이와 생물 다양성', q: '변이와 생물 다양성에 대한 설명으로 옳지 않은 것은?',
+              options: ['변이가 다양하면 급격한 환경 변화에 대처하기 어렵다.', '한 종류의 생물 무리에는 다양한 변이가 있다.', '환경에 맞는 변이를 지닌 생물이 살아남아 더 많은 자손을 남긴다.', '변이와 환경에 적응하는 과정은 생물 다양성의 주요 원인이다.', '오랜 세월이 지나면 원래 생물과 다른 새로운 종류가 나타나기도 한다.'], answer: 0,
+              explain: '변이가 다양하면 환경이 바뀌어도 살아남는 개체가 있을 가능성이 커요 → 대처하기 "쉬워요".' },
+            { topic: '변이와 생물 다양성', q: '갈라파고스제도의 핀치들이 섬마다 부리 모양이 다른 이유로 가장 적절한 것은?',
+              options: ['섬마다 먹이가 달라 먹이에 알맞은 부리를 가진 핀치가 살아남았기 때문', '섬마다 온도가 달라 부리가 녹거나 굳었기 때문', '핀치가 스스로 원하는 모양으로 부리를 바꾸었기 때문', '모든 핀치의 부리가 원래부터 똑같았기 때문', '사람이 부리 모양이 다른 핀치를 섬마다 옮겼기 때문'], answer: 0,
+              explain: '선인장·씨앗·곤충 등 먹이(환경)에 맞는 변이를 가진 핀치가 살아남아 자손을 남겼어요. 직접적인 요인은 온도가 아니라 먹이!' },
+            { topic: '생물 다양성', passage: '(가) 지역: 나무 10그루, 나무 종류 4가지 (고르게 분포)\n(나) 지역: 나무 10그루, 나무 종류 1가지',
+              q: '두 지역에 대한 설명으로 옳은 것은?',
+              options: ['(가)의 생물 다양성이 (나)보다 높다.', '(나)의 생물 다양성이 (가)보다 높다.', '나무 수가 같으므로 생물 다양성도 같다.', '(나)에 더 다양한 종류의 나무가 산다.', '생물 다양성은 생물의 수로만 비교한다.'], answer: 0,
+              explain: '생물 다양성은 생물의 "종류"가 많고, 각 종류가 "고르게" 분포할수록 높아요.' },
+            { topic: '분류 단계', q: '생물의 분류 단계를 작은 단위부터 순서대로 옳게 나타낸 것은?',
+              options: ['종 < 속 < 과 < 목 < 강 < 문 < 계', '종 < 과 < 속 < 목 < 강 < 문 < 계', '계 < 문 < 강 < 목 < 과 < 속 < 종', '종 < 속 < 목 < 과 < 강 < 문 < 계', '종 < 속 < 과 < 강 < 목 < 문 < 계'], answer: 0,
+              explain: '외우는 법: "종속과목강문계" (종이 가장 작은 단위, 계가 가장 큰 단위)' },
+            { topic: '분류 단계', q: '생물을 분류하는 기본 단위인 "종"에 대한 설명으로 옳은 것은?',
+              options: ['자연 상태에서 짝짓기하여 번식 능력이 있는 자손을 낳을 수 있는 무리', '생김새가 조금이라도 비슷한 생물의 무리', '같은 장소에 사는 모든 생물의 무리', '여러 개의 속이 모인 무리', '먹이가 같은 생물의 무리'], answer: 0,
+              explain: '종은 가장 작은 기본 단위! 말과 당나귀 사이의 노새는 번식 능력이 없어서 말과 당나귀는 다른 종이에요.' },
+            { topic: '분류 체계', passage: '개: 개속 - 개과 - 식육목 - 포유강\n늑대: 개속 - 개과 - 식육목 - 포유강\n고양이: 고양이속 - 고양잇과 - 식육목 - 포유강',
+              q: '이에 대한 설명으로 옳지 않은 것은?',
+              options: ['늑대와 고양이는 교배하여 번식 능력이 있는 자손을 낳을 수 있다.', '개와 늑대는 같은 문에 속한다.', '개, 늑대, 고양이는 모두 같은 계에 속한다.', '개와 고양이는 같은 목에 속한다.', '속 → 과 → 목으로 갈수록 포함되는 생물의 종류가 많아진다.'], answer: 0,
+              explain: '늑대와 고양이는 과부터 다른, 서로 다른 종이라 번식 가능한 자손을 낳을 수 없어요.\n같은 속이면 그 위 단계(과·목·강·문·계)도 모두 같아요.' },
+            { topic: '5계 분류', passage: '· 세포에 핵이 있다.\n· 다세포 생물이다.\n· 세포벽이 있다.\n· 광합성을 한다.',
+              q: '위 특징을 모두 가진 생물은?',
+              options: ['해바라기', '사자', '느타리버섯', '짚신벌레', '포도상 구균'], answer: 0,
+              explain: '세포벽 + 광합성 + 다세포 → 식물계\n사자(동물계: 세포벽 X), 버섯(균계: 광합성 X), 짚신벌레(원생생물계: 단세포), 포도상 구균(원핵생물계: 핵 X)' },
+            { topic: '5계 분류', q: '미역, 다시마, 아메바에 대한 설명으로 옳은 것은?',
+              options: ['모두 원생생물계에 속한다.', '모두 단세포 생물이다.', '모두 다세포 생물이다.', '미역과 다시마는 광합성을 할 수 없다.', '미역과 다시마는 뿌리, 줄기, 잎이 발달하였다.'], answer: 0,
+              explain: '원생생물계: 핵이 있고, 동물·식물·균계에 속하지 않는 생물. 아메바(단세포), 미역·다시마(다세포, 광합성 O, 뿌리·줄기·잎 구분 X)' },
+            { topic: '5계 분류', q: '생물 무리를 "원핵생물계"와 "나머지 계"로 나누는 기준은?',
+              options: ['세포에 핵이 있는지 없는지', '광합성을 하는지', '세포 수가 하나인지 여러 개인지', '움직일 수 있는지', '세포벽이 있는지'], answer: 0,
+              explain: '원핵생물계(대장균, 포도상 구균 등)는 뚜렷한 핵이 없어요. 균계와 식물계는 "광합성 여부"로 나눠요.' },
+            { topic: '5계 분류', q: '균계에 속하는 생물의 특징으로 옳은 것은?',
+              options: ['광합성을 하지 못하고 다른 생물에게서 양분을 얻는다.', '핵이 없는 단세포 생물이다.', '광합성을 하여 스스로 양분을 만든다.', '세포벽이 없고 운동 기관이 있다.', '뿌리, 줄기, 잎이 발달하였다.'], answer: 0,
+              explain: '균계: 버섯, 곰팡이, 효모. 세포벽은 있지만 광합성을 못 해요.' },
+            { topic: '생물 다양성 위협', q: '뉴트리아, 배스, 붉은귀거북과 같은 외래종에 대한 설명으로 옳은 것은?',
+              options: ['천적이 거의 없어 수가 크게 늘어 토종 생물을 위협할 수 있다.', '우리나라 고유종으로 생태계 안정에 중요한 역할을 한다.', '외래종이 들어오면 항상 생물 다양성이 증가한다.', '외래종은 모두 생태계에 도움을 준다.', '외래종은 우리나라 환경에서 살 수 없다.'], answer: 0,
+              explain: '외래종 일부는 천적이 없어 크게 번성하고 토종 생물을 잡아먹거나 서식지를 빼앗아 생물 다양성을 감소시켜요.' },
+            { topic: '생물 다양성 위협', q: '생물 다양성을 감소시키는 원인으로 보기 어려운 것은?',
+              options: ['생태 통로 건설', '남획', '환경 오염', '외래종 유입', '무분별한 개발(서식지 파괴)'], answer: 0,
+              explain: '생태 통로는 도로 등으로 끊긴 서식지를 이어 주는 "보전" 방법이에요.' },
+            { topic: '생물 다양성 위협', q: '남획으로 생물 다양성이 감소하는 까닭으로 가장 알맞은 것은?',
+              options: ['생물을 지나치게 많이 잡아 개체 수가 회복되지 못하고 멸종할 수 있기 때문', '생물이 사는 곳에 도로를 만들어 서식지가 나뉘기 때문', '다른 나라의 생물이 들어와 토종 생물을 잡아먹기 때문', '공장 폐수로 물이 오염되기 때문', '생물의 변이가 너무 다양해지기 때문'], answer: 0,
+              explain: '남획 = 생물을 마구 잡는 것. 서술형 키워드: 남획, 생물, 회복, 멸종 → "생물을 지나치게 많이 잡으면(남획) 개체 수가 회복되지 못해 멸종할 수 있다."' },
+            { topic: '생태계 평형', q: '먹이 그물과 생태계 평형에 대한 설명으로 옳은 것은?',
+              options: ['먹이 그물이 복잡할수록 생태계 평형이 잘 유지된다.', '먹이 그물이 단순할수록 생태계 평형이 잘 유지된다.', '한 생물이 사라지면 그 생물을 먹는 생물은 항상 모두 사라진다.', '생물 다양성은 생태계 평형과 관계가 없다.', '먹이 그물에서 생물의 종류가 적을수록 좋다.'], answer: 0,
+              explain: '먹이가 여러 종류면 한 먹이가 사라져도 다른 먹이를 먹을 수 있어요. 그래서 생물 다양성이 높고 먹이 그물이 복잡할수록 생태계가 안정적이에요.' },
+            { topic: '생물 다양성 보전', q: '생물 다양성 보전 활동으로 보기 어려운 것은?',
+              options: ['희귀한 동물을 애완용으로 기르기', '생물 보호 구역 지정', '멸종 위기 생물 복원 사업', '옥상 정원 만들기', '친환경 농산물 이용하기'], answer: 0,
+              explain: '희귀 동물을 잡아서 기르면 야생의 개체 수가 줄어 오히려 다양성을 해쳐요.' },
+            { topic: '생물 분류 과정', q: '생물을 분류하는 과정을 순서대로 옳게 나타낸 것은?',
+              options: ['생물의 특징 관찰 → 공통점과 차이점 찾기 → 분류 기준 정하기 → 무리 지어 나누기', '분류 기준 정하기 → 생물의 특징 관찰 → 무리 지어 나누기 → 공통점 찾기', '무리 지어 나누기 → 분류 기준 정하기 → 특징 관찰 → 공통점 찾기', '공통점과 차이점 찾기 → 무리 지어 나누기 → 특징 관찰 → 분류 기준 정하기', '생물의 특징 관찰 → 분류 기준 정하기 → 무리 지어 나누기 → 공통점 찾기'], answer: 0,
+              explain: '관찰 → 공통점·차이점 찾기 → 분류 기준 정하기 → 공통점 있는 생물끼리 나누기 (서술형 4번 유형!)' }
+        ];
+
+
+const SUBJECTS = ['국어', '영어', '수학', '과학'];
+const SUBJECT_COLORS = { 국어: '#e67e22', 영어: '#4a90e2', 수학: '#27ae60', 과학: '#8e44ad' };
+
+const ALL_Q = [];
+SUBJECTS.forEach(s => (QUESTIONS[s] || []).forEach((q, i) => ALL_Q.push({ ...q, subject: s, id: `${s}-${i}` })));
+
+// 단원(topic) 목록: 과목 안에서 처음 나온 순서대로
+const TOPICS = [];
+ALL_Q.forEach(q => {
+  let t = TOPICS.find(x => x.subject === q.subject && x.topic === q.topic);
+  if (!t) { t = { subject: q.subject, topic: q.topic, qs: [] }; TOPICS.push(t); }
+  t.qs.push(q);
+});
+
+// ===== 상태 =====
+let state = {};
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function shorten(s, n) {
+  const one = s.replace(/\s+/g, " ");
+  return one.length > n ? one.slice(0, n) + "…" : one;
+}
+
+const app = document.getElementById("app");
+
+// ===== 저장소 (localStorage) =====
+function storeGet(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key) || fallback); }
+  catch (e) { return JSON.parse(fallback); }
+}
+function storeSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+}
+function storeRemove(key) {
+  try { localStorage.removeItem(key); } catch (e) {}
+}
+
+// 확인창 대신 "한 번 더 누르기"로 확인
+function armButton(btn, armedText, action) {
+  btn.addEventListener("click", () => {
+    if (btn.classList.contains("armed")) { action(); return; }
+    const original = btn.textContent;
+    btn.classList.add("armed");
+    btn.textContent = armedText;
+    setTimeout(() => {
+      if (document.body.contains(btn)) { btn.classList.remove("armed"); btn.textContent = original; }
+    }, 3000);
+  });
+}
+
+// ===== 시험 기록 =====
+const MODE_LABELS = { study: "📖 기본", real: "🔥 실전" };
+const HISTORY_KEY = "eunyul-quiz-history";
+
+function loadHistory() { return storeGet(HISTORY_KEY, "[]"); }
+function saveHistoryEntry(entry) {
+  const h = loadHistory();
+  h.unshift(entry);
+  storeSet(HISTORY_KEY, h.slice(0, 50));
+}
+function fmtDate(ts) {
+  const d = new Date(ts);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`;
+}
+function historyHTML() {
+  const h = loadHistory();
+  return `
+    <div class="history-section">
+      <div class="history-title">
+        <span>📜 시험 기록</span>
+        ${h.length ? `<button class="btn-clear-history" id="btn-clear-history">기록 지우기</button>` : ""}
+      </div>
+      ${h.length ? `<div class="history-list">
+        ${h.map(e => `
+          <div class="history-item">
+            <span class="h-mode">${MODE_LABELS[e.mode] || e.mode}</span>
+            <span class="h-score">${e.accuracy}% · ⭕${e.correct} ❌${e.attempts - e.correct}</span>
+            <span class="h-range">${escapeHtml(e.range)}</span>
+            <span class="h-date">${fmtDate(e.date)}</span>
+          </div>`).join("")}
+      </div>`
+      : `<div class="history-empty">아직 시험 기록이 없어요. 첫 시험을 쳐 보세요!</div>`}
+    </div>`;
+}
+
+// ===== 오답 통계 (누적) =====
+const WRONG_STATS_KEY = "eunyul-wrong-stats";
+
+function loadWrongStats() { return storeGet(WRONG_STATS_KEY, "{}"); }
+function bumpWrongStat(id, delta) {
+  const stats = loadWrongStats();
+  const next = (stats[id] || 0) + delta;
+  if (next <= 0) delete stats[id];
+  else stats[id] = next;
+  storeSet(WRONG_STATS_KEY, stats);
+}
+// 자주 틀리는 문제: 많이 틀린 순, 최대 20개
+function reviewQuestions() {
+  const stats = loadWrongStats();
+  return ALL_Q.filter(q => stats[q.id] > 0)
+    .sort((a, b) => stats[b.id] - stats[a.id])
+    .slice(0, 20);
+}
+
+// ===== 시작 화면 =====
+function renderStart() {
+  state = {};
+  app.innerHTML = `
+    <h1>📝 은율이의 중간고사</h1>
+    <p class="subtitle">1학년 2학기 · 모드와 범위를 고르고 시험을 시작하세요</p>
+    <div class="section-label">시험 모드</div>
+    <div class="mode-list">
+      <label class="mode-item selected">
+        <input type="radio" name="mode" value="study" checked>
+        <span class="mode-name">📖 기본</span>
+        <span class="mode-desc">문제 풀고<br>바로 해설 보기</span>
+      </label>
+      <label class="mode-item">
+        <input type="radio" name="mode" value="real">
+        <span class="mode-name">🔥 실전</span>
+        <span class="mode-desc">해설 없이<br>정답만 확인</span>
+      </label>
+    </div>
+    <div class="range-head">
+      <span class="section-label">시험 범위</span>
+      <button class="btn-toggle-all" id="btn-toggle-all">전체 선택/해제</button>
+    </div>
+    <div class="lesson-list">
+      ${SUBJECTS.map(s => `
+        <label class="unit-head">
+          <input type="checkbox" class="unit-check" data-unit="${s}" checked> ${s}
+          <span class="unit-count">${ALL_Q.filter(q => q.subject === s).length}문제</span>
+        </label>
+        ${TOPICS.map((t, i) => t.subject !== s ? "" : `
+        <label class="lesson-item">
+          <input type="checkbox" value="${i}" data-unit="${s}" checked>
+          <span class="name">${escapeHtml(t.topic)}</span>
+          <span class="count">${t.qs.length}문제</span>
+        </label>`).join("")}`).join("")}
+    </div>
+    <div class="section-label">문제 수</div>
+    <div class="count-list">
+      ${[10, 20, 30, 0].map(n => `
+        <label class="count-item ${n === 20 ? "selected" : ""}">
+          <input type="radio" name="count" value="${n}" ${n === 20 ? "checked" : ""}>
+          <span class="count-name">${n ? `${n}문제` : "전체"}</span>
+        </label>`).join("")}
+    </div>
+    <div class="count-hint" id="count-hint"></div>
+    <button class="btn-primary" id="btn-start">시험 시작!</button>
+    ${(() => {
+      const rq = reviewQuestions();
+      const stats = loadWrongStats();
+      return `
+      <div class="range-head" style="margin-top:24px">
+        <span class="section-label">복습</span>
+        ${rq.length ? `<button class="btn-clear-history" id="btn-clear-stats">오답 통계 지우기</button>` : ""}
+      </div>
+      ${rq.length
+        ? `<button class="btn-review" id="btn-review">🔁 자주 틀리는 문제만 풀기 (${rq.length}문제)</button>
+           <div class="review-hint">많이 틀린 단원: ${rq.slice(0, 3).map(q => `${q.subject} ${escapeHtml(q.topic)} ${stats[q.id]}회`).join(" · ")}</div>`
+        : `<div class="history-empty">아직 오답 데이터가 없어요. 시험에서 틀린 문제가 여기에 자동으로 모여요.</div>`}`;
+    })()}
+    ${historyHTML()}
+  `;
+  const boxes = [...app.querySelectorAll('.lesson-item input')];
+  const startBtn = document.getElementById("btn-start");
+  const countInputs = [...app.querySelectorAll('.count-item input')];
+  const pickedTopics = () => boxes.filter(b => b.checked).map(b => TOPICS[parseInt(b.value)]);
+  const update = () => {
+    const available = pickedTopics().reduce((sum, t) => sum + t.qs.length, 0);
+    const want = parseInt(countInputs.find(r => r.checked).value);
+    const n = want ? Math.min(want, available) : available;
+    startBtn.disabled = available === 0;
+    startBtn.textContent = available ? `시험 시작! (${n}문제)` : "시험 범위를 골라 주세요";
+    document.getElementById("count-hint").textContent =
+      want && want > available && available ? `고른 범위에 ${available}문제뿐이라 ${available}문제로 풀어요` : "";
+  };
+  countInputs.forEach(r => r.addEventListener("change", () => {
+    app.querySelectorAll('.count-item').forEach(el => el.classList.remove("selected"));
+    r.closest(".count-item").classList.add("selected");
+    update();
+  }));
+  const unitChecks = [...app.querySelectorAll(".unit-check")];
+  const syncUnits = () => unitChecks.forEach(u => {
+    u.checked = boxes.filter(b => b.dataset.unit === u.dataset.unit).every(b => b.checked);
+  });
+  boxes.forEach(b => b.addEventListener("change", () => { syncUnits(); update(); }));
+  unitChecks.forEach(u => u.addEventListener("change", () => {
+    boxes.filter(b => b.dataset.unit === u.dataset.unit).forEach(b => { b.checked = u.checked; });
+    update();
+  }));
+  update();
+  document.getElementById("btn-toggle-all").addEventListener("click", () => {
+    const turnOn = boxes.some(b => !b.checked);
+    boxes.forEach(b => { b.checked = turnOn; });
+    syncUnits(); update();
+  });
+  const modeInputs = [...app.querySelectorAll('.mode-item input')];
+  modeInputs.forEach(r => r.addEventListener("change", () => {
+    app.querySelectorAll('.mode-item').forEach(el => el.classList.remove("selected"));
+    r.closest(".mode-item").classList.add("selected");
+  }));
+  startBtn.addEventListener("click", () => {
+    const picked = pickedTopics();
+    let qs = picked.flatMap(t => t.qs);
+    const want = parseInt(countInputs.find(r => r.checked).value);
+    if (want) qs = shuffle(qs).slice(0, want);
+    const mode = modeInputs.find(r => r.checked).value;
+    const range = picked.length === TOPICS.length ? "전체" : SUBJECTS.map(s => {
+      const all = TOPICS.filter(t => t.subject === s).length;
+      const got = picked.filter(t => t.subject === s).length;
+      return got === 0 ? "" : got === all ? s : `${s} 일부`;
+    }).filter(Boolean).join(" · ");
+    startQuiz(qs, mode, range);
+  });
+  const clearBtn = document.getElementById("btn-clear-history");
+  if (clearBtn) armButton(clearBtn, "한 번 더 누르면 지워요", () => {
+    storeRemove(HISTORY_KEY);
+    renderStart();
+  });
+  const reviewBtn = document.getElementById("btn-review");
+  if (reviewBtn) reviewBtn.addEventListener("click", () => {
+    const mode = modeInputs.find(r => r.checked).value;
+    startQuiz(reviewQuestions(), mode, "복습", true);
+  });
+  const clearStatsBtn = document.getElementById("btn-clear-stats");
+  if (clearStatsBtn) armButton(clearStatsBtn, "한 번 더 누르면 지워요", () => {
+    storeRemove(WRONG_STATS_KEY);
+    renderStart();
+  });
+}
+
+// ===== 퀴즈 시작 =====
+function startQuiz(questions, mode, range, isReview) {
+  state = {
+    mode: mode || "study",
+    range: range || "전체",
+    isReview: !!isReview,
+    totalQuestions: questions.length,
+    round: 1,
+    queue: shuffle(questions),
+    idx: 0,
+    wrongThisRound: [],
+    totalAttempts: 0,
+    totalCorrect: 0,
+    wrongCount: {},   // id -> 틀린 횟수
+    answered: false
+  };
+  renderQuestion();
+}
+
+function currentQ() { return state.queue[state.idx]; }
+
+// ===== 문제 화면 =====
+function renderQuestion() {
+  const q = currentQ();
+  state.answered = false;
+  state.opts = shuffle(q.options.map((t, i) => ({ t, ok: i === q.answer })));
+
+  const progress = (state.idx / state.queue.length) * 100;
+  const isRetry = state.round > 1;
+
+  app.innerHTML = `
+    <div class="top-bar">
+      <span class="round-badge ${isRetry ? "retry" : ""}">
+        ${isRetry ? `🔁 오답 다시 풀기 (${state.round}차)` : "1차 시험"}
+      </span>
+      <button class="btn-restart" id="btn-restart">⟲ 처음부터</button>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
+    <div class="progress-text">${state.idx + 1} / ${state.queue.length}</div>
+    <div class="score-line">
+      <span class="sc-ok">⭕ 맞음 ${state.totalCorrect}</span>
+      <span class="sc-no">❌ 틀림 ${state.totalAttempts - state.totalCorrect}</span>
+    </div>
+    <div class="q-box">
+      <div class="q-meta">
+        <span class="subj-chip" style="background:${SUBJECT_COLORS[q.subject]}">${q.subject}</span>
+        <span>${escapeHtml(q.topic)}</span>
+      </div>
+      ${(q.passage || q.fig) ? `<div class="passage">${q.passage ? escapeHtml(q.passage) : ""}${q.fig ? `<div class="fig">${q.fig}</div>` : ""}</div>` : ""}
+      <div class="question">${escapeHtml(q.q)}</div>
+      <div class="word-hint">알맞은 답을 고르세요 (키보드 1~${state.opts.length})</div>
+    </div>
+    <div class="choices">
+      ${state.opts.map((o, i) => `
+        <button class="choice" data-i="${i}">
+          <span class="num">${i + 1}</span><span class="txt">${escapeHtml(o.t)}</span>
+        </button>`).join("")}
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div id="explain-area"></div>
+  `;
+
+  armButton(document.getElementById("btn-restart"), "한 번 더 누르면 처음으로", renderStart);
+  app.querySelectorAll(".choice").forEach(btn =>
+    btn.addEventListener("click", () => answer(parseInt(btn.dataset.i)))
+  );
+  window.scrollTo(0, 0);
+}
+
+// ===== 답변 처리 =====
+function answer(i) {
+  if (state.answered) return;
+  state.answered = true;
+
+  const q = currentQ();
+  const correct = state.opts[i].ok;
+  const correctNo = state.opts.findIndex(o => o.ok) + 1;
+
+  state.totalAttempts++;
+  if (correct) {
+    state.totalCorrect++;
+    if (state.round === 1 && state.isReview) bumpWrongStat(q.id, -1); // 복습에서 맞히면 통계 감소
+  } else {
+    state.wrongThisRound.push(q);
+    state.wrongCount[q.id] = (state.wrongCount[q.id] || 0) + 1;
+    if (state.round === 1) bumpWrongStat(q.id, +1); // 오답 통계 누적 (오답 라운드는 제외)
+  }
+
+  const btns = [...app.querySelectorAll(".choice")];
+  btns.forEach((b, j) => {
+    b.disabled = true;
+    if (state.opts[j].ok) b.classList.add("correct");
+    else if (j === i) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+
+  const fb = document.getElementById("feedback");
+  fb.className = "feedback " + (correct ? "ok" : "no");
+  fb.textContent = correct ? "⭕ 정답입니다!" : `❌ 틀렸어요! 정답: ${correctNo}번`;
+
+  // 기본 모드이거나, 오답 다시 풀기 라운드면 해설 보여주기
+  const area = document.getElementById("explain-area");
+  if (state.mode === "study" || state.round > 1) {
+    area.innerHTML = `
+      <div class="answer-reveal">
+        <div class="answer-label">💡 해설</div>
+        <div class="explain-text">${escapeHtml(q.explain)}</div>
+      </div>`;
+  }
+
+  const next = document.createElement("button");
+  next.className = "btn-next";
+  next.id = "btn-next";
+  const isLast = state.idx === state.queue.length - 1;
+  next.textContent = isLast && state.wrongThisRound.length === 0 ? "결과 보기 →" : "다음 문제 → (Enter)";
+  next.addEventListener("click", nextQuestion);
+  area.appendChild(next);
+  next.focus({ preventScroll: true });
+}
+
+function nextQuestion() {
+  state.idx++;
+  if (state.idx < state.queue.length) {
+    renderQuestion();
+  } else if (state.wrongThisRound.length > 0) {
+    // 오답 라운드 시작
+    state.round++;
+    state.queue = shuffle(state.wrongThisRound);
+    state.wrongThisRound = [];
+    state.idx = 0;
+    renderQuestion();
+  } else {
+    renderResult();
+  }
+}
+
+// ===== 결과 화면 =====
+function renderResult() {
+  const wrongEntries = Object.entries(state.wrongCount)
+    .sort((a, b) => b[1] - a[1]);
+  const accuracy = state.totalAttempts
+    ? Math.round((state.totalCorrect / state.totalAttempts) * 100) : 0;
+  const perfect = wrongEntries.length === 0;
+
+  saveHistoryEntry({
+    date: Date.now(),
+    mode: state.mode,
+    range: state.range,
+    questions: state.totalQuestions,
+    attempts: state.totalAttempts,
+    correct: state.totalCorrect,
+    accuracy,
+    rounds: state.round
+  });
+
+  app.innerHTML = `
+    <div class="result-emoji">${perfect ? "🏆" : accuracy >= 80 ? "🎉" : "💪"}</div>
+    <div class="result-title">${perfect ? "완벽해요! 한 번에 다 맞혔어요!" : "모든 문제를 다 맞혔어요!"}</div>
+    <div class="stats">
+      <div class="stat"><div class="val" style="color:#27ae60">${state.totalCorrect}</div><div class="label">⭕ 맞음</div></div>
+      <div class="stat"><div class="val" style="color:#e74c3c">${state.totalAttempts - state.totalCorrect}</div><div class="label">❌ 틀림</div></div>
+      <div class="stat"><div class="val">${accuracy}%</div><div class="label">정답률</div></div>
+      <div class="stat"><div class="val">${state.round}</div><div class="label">라운드</div></div>
+    </div>
+    ${perfect
+      ? `<p class="perfect-msg">틀린 문제가 하나도 없어요 👏</p>`
+      : `<div class="wrong-list-title">📌 틀렸던 문제 (복습하세요!)</div>
+         <div class="wrong-list">
+           ${wrongEntries.map(([id, cnt]) => {
+             const q = ALL_Q.find(x => x.id === id);
+             return `<div class="wrong-item">
+               <div class="top"><span class="en">${q.subject} · ${escapeHtml(q.topic)}</span><span class="cnt">${cnt}회 틀림</span></div>
+               <span class="ko">${escapeHtml(shorten(q.q, 60))}</span>
+             </div>`;
+           }).join("")}
+         </div>`}
+    <button class="btn-primary" id="btn-again">처음부터 다시 하기</button>
+  `;
+  document.getElementById("btn-again").addEventListener("click", renderStart);
+  window.scrollTo(0, 0);
+}
+
+// ===== 키보드 단축키 =====
+document.addEventListener("keydown", e => {
+  if (!state.queue) return;
+  const n = state.opts ? state.opts.length : 0;
+  if (e.key >= "1" && e.key <= String(n) && !state.answered) {
+    answer(parseInt(e.key) - 1);
+  } else if (e.key === "Enter" && state.answered) {
+    const btn = document.getElementById("btn-next");
+    if (btn && document.activeElement !== btn) nextQuestion();
+  }
+});
+
+renderStart();
+</script>
+</body>
+</html>
